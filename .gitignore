@@ -1,0 +1,10 @@
+.DS_Srore
+.srctree
+.idea
+*.ignore
+*.cache
+tools/PkgConf
+
+# this file is “NOT” ignoring.
+!.gitignore
+!.root
