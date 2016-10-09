@@ -4,7 +4,7 @@
 *.ignore
 *.cache
 tools/PkgConf
-src/experimental
+src/[Ee]xperimental/*
 
 # this file is “NOT” ignoring.
 !.gitignore
