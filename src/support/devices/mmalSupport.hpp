@@ -40,6 +40,8 @@
 #ifndef _mmalSupport_hpp_
 #define _mmalSupport_hpp_
 
+#include "bcm_host.h"
+
 #include "interface/mmal/mmal.h"
 #include "interface/mmal/mmal_logging.h"
 #include "interface/mmal/mmal_buffer.h"
