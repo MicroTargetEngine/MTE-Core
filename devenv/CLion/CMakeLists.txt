@@ -79,7 +79,7 @@ add_executable(FireBase_Core ${src_files})
 
 ## 7. include dependent libs
 message(STATUS "** Libraries Include : ${LIBRARY_MODULES}")
-target_link_libraries(FireBase_Core ${LIBRARY_MODULES})
+target_link_libraries(FireBase_Core pthread ${LIBRARY_MODULES})
 
 #message(STATUS "** sources :${src_files}")
 #message(STATUS "** dirs :${src_directories}")

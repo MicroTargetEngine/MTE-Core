@@ -36,11 +36,11 @@
 #
 #===============================================================================
 
-#set(CMAKE_C_COMPILER "gcc" CACHE STRING "C Compiler" FORCE)
-#set(CMAKE_CXX_COMPILER "g++" CACHE STRING "C++ Compiler" FORCE)
-#set(CMAKE_AR "ar" CACHE STRING "ar" FORCE)
-#set(CMAKE_LINKER "ld" CACHE STRING "linker" FORCE)
-#set(CMAKE_LINKER "gcc" CACHE STRING "linker" FORCE)
-#set(CMAKE_STRIP "strip" CACHE STRING "strip" FORCE)
-#set(CMAKE_RANLIB "ranlib" CACHE STRING "ranlib" FORCE)
-#set(CMAKE_NM "nm" CACHE STRING "nm" FORCE)
+set(CMAKE_C_COMPILER "gcc" CACHE STRING "C Compiler" FORCE)
+set(CMAKE_CXX_COMPILER "g++" CACHE STRING "C++ Compiler" FORCE)
+set(CMAKE_AR "ar" CACHE STRING "ar" FORCE)
+set(CMAKE_LINKER "ld" CACHE STRING "linker" FORCE)
+set(CMAKE_LINKER "gcc" CACHE STRING "linker" FORCE)
+set(CMAKE_STRIP "strip" CACHE STRING "strip" FORCE)
+set(CMAKE_RANLIB "ranlib" CACHE STRING "ranlib" FORCE)
+set(CMAKE_NM "nm" CACHE STRING "nm" FORCE)
