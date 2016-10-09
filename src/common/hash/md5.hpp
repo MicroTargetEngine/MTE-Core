@@ -122,6 +122,6 @@ public:
   void md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
 };
 
-#endif _md5_hpp_
+#endif // _md5_hpp_
 
 #endif // SET_COMMON_MODULE_HASH

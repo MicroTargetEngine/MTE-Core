@@ -43,7 +43,7 @@
 #include "OpenCVSupport.hpp"
 
 #if defined(SET_CORE_ENGINE_MODULE_DATAAUTOMATOR) || defined(SET_CORE_ENGINE_MODULE_FEATURESEARCHER)
-typedef struct _InnerFormalizaionData {
+typedef struct _FeatureData {
 	/*
 	string hid;
 	string comp_name;
@@ -87,9 +87,14 @@ typedef struct _LaneDetectData {
   int RPoint_Y;
 
   _LaneDetectData() : VPoint_X(0), VPoint_Y(0), RPoint_X(0), RPoint_Y(0) {}
-  ~_LaneDetectData() : VPoint_X(0), VPoint_Y(0), RPoint_X(0), RPoint_Y(0) {}
+  ~_LaneDetectData() {
+    VPoint_X = 0;
+    VPoint_Y = 0;
+    RPoint_X = 0;
+    RPoint_Y = 0;
+  }
 
-  double Get_AngleToPointByImagePosition() {
+	double Get_AngleToPointByImagePosition() {
     double _Tdx = (double)RPoint_X - (double)VPoint_X;
     double _Tdy = (double)RPoint_Y - (double)VPoint_Y;
     return (atan2(_Tdy, _Tdx) * 180.0f) / M_PI;

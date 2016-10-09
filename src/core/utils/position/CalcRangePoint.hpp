@@ -38,7 +38,9 @@
 #ifndef _CalcRangePoint_hpp_
 #define _CalcRangePoint_hpp_
 
-#include "SystemCommon.hpp"
+//#include "SystemCommon.hpp"
+#include <stdlib.h>
+#include <math.h>
 
 #include "GPS.hpp"
 

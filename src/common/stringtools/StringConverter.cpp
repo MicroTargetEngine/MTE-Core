@@ -46,7 +46,7 @@ string StringConverter::ToString(const T& Any) {
 const char *StringConverter::StringToConstCharPointer(string Str) {
 	const char *_TConstStr = Str.c_str();
 	char *_TStr = new char[BUFFER_MAX_32767];
-	memset(_TStr, NULL, sizeof(_TStr));
+	memset(_TStr, 0, sizeof(_TStr));
 	strcpy(_TStr, _TConstStr);
 	return ConstCharToChar(_TStr);
 }
