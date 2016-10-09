@@ -138,76 +138,14 @@ void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
         //_TTime.Start();
         // 집어 넣어진 것을 꺼내어 보고 앞에껀 pop 해버린다.
         __MUTEXLOCK(_TEngine->_Mutex_InputSceneDataQueue);
-        Mat _TSceneFeatureSet = _TEngine->_InputSceneDataQueue.front();
+        Mat _TBinaryScene = _TEngine->_InputSceneDataQueue.front();
         _TEngine->_InputSceneDataQueue.pop();
         __MUTEXUNLOCK(_TEngine->_Mutex_InputSceneDataQueue);
 
-#if !defined(MODE_ONLY_DETECTION)
-        vector<int> _TWorkListNumbers;
+        // Do Program.
 
-				__MUTEXLOCK(_TEngine->_Mutex_NavigateData);
-				for (register int i = 0; i < _TEngine->_NavigateData.size(); i++)
-					_TWorkListNumbers.push_back(i);
-				__MUTEXUNLOCK(_TEngine->_Mutex_NavigateData);
-				// 일단 1 frame이 추출이 되었고, 현재 반경데이터가 있을 때,
-				// 기본적으로 이를 다 완료 될 때까지 처리하고 들어온 1 frame에 대한 n개의 정보에 대한 분석을 끝낸다.
-				// 그러기 위해서는 일감을 전달해야하는 routine이 필요하다.
-				while (1) {
-					// 가장 먼저, 일감이 업데이트 되어있는지를 살핀다. 만약 업데이트가 되었다면,
-					// 모바일에 넘겨줄 기존 Data를 파기하고, 새 Data를 찾아서 주어야 한다.
-					if (_TEngine->_NavigateDataUpdated == true) {
-						__MUTEXLOCK(_TEngine->_Mutex_SortedData);
-						_TEngine->_SortedData.clear();
-						__MUTEXUNLOCK(_TEngine->_Mutex_SortedData);
-						_TEngine->_NavigateDataUpdated = false;
-					}
-					// 일감을 전달한다. 중간에 일감을 Update할 경우에는,
-					// 기존에 돌던걸 Flush하고, while loop를 종료하는 것을 원칙으로 한다.
-					Thread _TThread[CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD];
-					WorkingInformation _TWorkInfo[CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD];
-					//int _TNoWorkRange = -1;
+        //_TEngine->TLaneSearchedResultCallback(_TBinaryScene);
 
-					vector<int> _TWorkListNumberWithThreadNumbers = _TEngine->_MakeWorkNumberList(_TWorkListNumbers, CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD);
-					vector<FeatureData> _TWorkList = _TEngine->_MakeWorkList(_TWorkListNumberWithThreadNumbers);
-
-					// Working Infomation 생성.
-					for(register int i = 0; i < _TWorkListNumberWithThreadNumbers.size(); i++) {
-						_TWorkInfo[i]._SceneFeature = _TSceneFeatureSet;
-						_TWorkInfo[i]._WorkingInfo = _TWorkList.at(i);
-						_TWorkInfo[i]._WorkingInfoIndex = _TWorkListNumberWithThreadNumbers.at(i);
-						_TWorkInfo[i]._PFeatureSearcher = _TEngine;
-					}
-					// Thread를 Joinable하게 만들고, Start 시킨다.
-					for(register int i = 0; i < _TWorkListNumberWithThreadNumbers.size(); i++) {
-						// thread Join Mode.
-						_TThread[i].AttacheMode = true;
-						_TThread[i].StartThread(_ImageSearcher_WorkerThread, &_TWorkInfo[i]);
-					}
-
-					// Join한다. 기다리는데 시간은 보장할 수 없다.
-					for(register int i = 0; i < _TWorkListNumberWithThreadNumbers.size(); i++)
-						_TThread[i].JoinThread();
-
-					// 일감을 다 채웠는가? 다 채웠으면 break.
-					if (_TWorkListNumbers.size() == 0)
-						break;
-				}
-
-				if (_TEngine->_SortedData.size() != 0) {
-					// 완료된 결과는 외부로 보낸다.
-					vector<FeatureData> _TSortedData;
-
-					//__MUTEXLOCK(_TEngine->_Mutex_SortedData);
-					_TSortedData = _TEngine->_SortedData;
-					//__MUTEXUNLOCK(_TEngine->_Mutex_SortedData);
-					_TEngine->TImageSearchedResultCallback(_TSortedData);
-					_TEngine->_SortedData.clear();
-				}
-				//_TTime.End();
-				//G_LogD->Logging("Time", "End of Match Time : %lf", _TTime.Get_ElapsedTime());
-#else
-        _TEngine->TLaneSearchedResultCallback(_TSceneFeatureSet);
-#endif
       }
       else
         _TEngine->_InputSceneDataQueueSyncSignal.Wait();
