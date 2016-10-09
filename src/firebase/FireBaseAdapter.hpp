@@ -42,7 +42,12 @@
 
 #include "FireBaseAdapterVariable.hpp"
 
+#if defined(SET_DEVICE_MMAL)
+#include "mmalAdapter.hpp"
+#endif
+#if defined(SET_DEVICE_SERIAL)
 #include "SerialAdapter.hpp"
+#endif
 
 #if defined(WINDOWS_SYS)
 #include "ExConsole/ConsoleLogger.hpp"
@@ -104,11 +109,13 @@ private:
 #if !defined(MODE_ONLY_DETECTION)
 			vector<FeatureData>
 #else
-			FeatureData
+      FeatureSets
 #endif
 			__Data);
 	//static void _FireBaseAdapter_DatabaseSearchedResult(vector<FeatureData> __SortedData);
 	static void _FireBaseAdapter_AutoFocus(void);
+  static void _FireBaseAdapter_LaneSearchedResult(LaneDetectData __Data);
+
 #if defined(LOG_WRITE_MODE)
 	static void _AllLogCallback(const char *__CallValueString, const char *__Messages);
 #endif

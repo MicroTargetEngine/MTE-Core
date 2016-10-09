@@ -108,7 +108,7 @@ void FireBaseAdapter::_PutAuthor() {
 string FireBaseAdapter::_GetCLICommandStr() {
   char *_TCommand = (char *)calloc(BUFFER_MAX_32767, sizeof(char));
   string _TCommandString = "";
-  memset(_TCommand, NULL, sizeof(_TCommand));
+  memset(_TCommand, 0, sizeof(_TCommand));
 
 	if (fgets(_TCommand, BUFFER_MAX_32767, stdin) == NULL) {
 		if (feof(stdin)) {
@@ -122,7 +122,7 @@ string FireBaseAdapter::_GetCLICommandStr() {
 		*_StrPtr = '\0';
 
   _TCommandString.append(_TCommand);
-  memset(_TCommand, NULL, sizeof(_TCommand));
+  memset(_TCommand, 0, sizeof(_TCommand));
   free(_TCommand);
 
   return _TCommandString;
@@ -249,11 +249,12 @@ bool FireBaseAdapter::_IsEmptyCommandStrQueue() {
   return _TResult;
 }
 
+/* Start SearchedResult Callback */
 void FireBaseAdapter::_FireBaseAdapter_FeatureSearchedResult(
 #if !defined(MODE_ONLY_DETECTION)
     vector<FeatureData>
 #else
-    FeatureData
+    FeatureSets
 #endif
     __Data) {
 	__MUTEXLOCK(G_Adapter->_ViewPointMutex);
@@ -279,6 +280,15 @@ void FireBaseAdapter::_FireBaseAdapter_AutoFocus(void) {
 	
 }
 
+void FireBaseAdapter::_FireBaseAdapter_LaneSearchedResult(LaneDetectData __Data) {
+  __MUTEXLOCK(G_Adapter->_ViewPointMutex);
+  G_Adapter->_ViewPoint.clear();
+  __MUTEXUNLOCK(G_Adapter->_ViewPointMutex);
+
+}
+/* end SearchedResult Callback */
+
+/* Start CommandThreads */
 void *FireBaseAdapter::_FireBaseAdapter_InputCLICommandThread(void *Param) {
 	FireBaseAdapter *_TAdapter = (FireBaseAdapter *)Param;
 
@@ -341,6 +351,7 @@ void *FireBaseAdapter::_FireBaseAdapter_ParseCommandThread(void *Param){
 
   return 0;
 }
+/* End CommandThreads */
 
 void *FireBaseAdapter::_FireBaseAdapter_VisionThread(void *Param) {
 	FireBaseAdapter *_TAdapter = (FireBaseAdapter *)Param;
@@ -356,6 +367,8 @@ void *FireBaseAdapter::_FireBaseAdapter_VisionThread(void *Param) {
 		return 0;
 #else
   // for mmal.
+  mmalAdapter _TCapture;
+  _TCapture.open(_TAdapter->_CamResWidth, _TAdapter->_CamResHeight, true);
 #endif
 	__MUTEXINIT(_TAdapter->_ViewPointMutex);
 
@@ -365,6 +378,7 @@ void *FireBaseAdapter::_FireBaseAdapter_VisionThread(void *Param) {
 		_TCapture >> _TAdapter->_ViewMat;
 #else
     // for mmal.
+    _TAdapter->_ViewMat = _TCapture.grab();
 #endif
 		if (_TAdapter->_FireBaseEngine->Get_EngineStart() == true) {
 			// 반드시 Clone 해서 주어야 함.
@@ -402,13 +416,14 @@ void FireBaseAdapter::Start_Engine() {
 #endif
 
 	_FireBaseEngine->TExternalFeatureSearchingResultPassingCallback = _FireBaseAdapter_FeatureSearchedResult;
-	//_FireBaseEngine->TExternalTextSearchingResultPassingCallback = _FireBaseAdapter_DatabaseSearchedResult;
+	_FireBaseEngine->TExternalLaneSearchingResultPassingCallback = _FireBaseAdapter_LaneSearchedResult;
 	_FireBaseEngine->TExternalForceAutofocusCallback = _FireBaseAdapter_AutoFocus;
 
 #if defined(LOG_WRITE_MODE)
 	G_LogD->SetCallback(_AllLogCallback);
 #endif
 
+  // Activate Vision Thread.
 	_VisionThread.StartThread(_FireBaseAdapter_VisionThread, this);
 
   // Activate Command Threads.
@@ -420,6 +435,8 @@ void FireBaseAdapter::Start_Engine() {
   _InputSerialCommandThread.StartThread(_FireBaseAdapter_InputSerialCommandThread, this);
 #endif
 
+  // Activate Command Parser Threads.
+  // Must be cached ParseCommandThread.
   _ParseCommandThread.StartThread(_FireBaseAdapter_ParseCommandThread, this);
 
   // Activate Engine Thread.
