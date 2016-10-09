@@ -44,7 +44,7 @@
 
 #include <termios.h>
 #include <fcntl.h>
-#include <sys/event.h>
+//#include <sys/event.h>
 
 #endif // _SerialSupport_hpp_
 
