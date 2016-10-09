@@ -1,9 +1,10 @@
-.DS_Srore
+.DS_Store
 .srctree
 .idea
 *.ignore
 *.cache
 tools/PkgConf
+src/experimental
 
 # this file is “NOT” ignoring.
 !.gitignore
