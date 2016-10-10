@@ -40,7 +40,8 @@
 #ifndef _LaneSearcher_hpp_
 #define _LaneSearcher_hpp_
 
-#include "FeatureDesc.hpp"
+#include "ImageStitcher.hpp"
+#include "MathematicalFunc.hpp"
 
 #include "CoreDefines.hpp"
 #include "CoreVariables.hpp"
@@ -49,8 +50,13 @@
 
 class LaneSearcher {
 private:
-
-
+  // 일감 분배용 작업 정보 구조체.
+  typedef struct _LaneSearcherWorkingInformation {
+    Mat _SceneMat;
+    int _WorkingInfoIndex;
+    vector<Vec4i> _HoughLineResult;
+    LaneSearcher *_PFeatureSearcher;
+  } LaneSearcherWorkingInformation;
   Thread _Thread;
 
   // Thread가 읽고, 외부에서 보내주는 공유 자원들.
@@ -78,7 +84,7 @@ private:
   void _ThrowUpImageQueue();
   bool _IsEmptyImageQueue();
 
-  static void *_ImageSearcher_WorkerThread(void *Param);
+  static void *_LaneSearcher_WorkerThread(void *Param);
   static void *_LaneSearcher_WorkAssignThread(void *Param);
   static void *_LaneSearcher_MainThread(void *Param);
 

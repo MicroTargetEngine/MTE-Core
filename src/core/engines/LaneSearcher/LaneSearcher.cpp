@@ -56,10 +56,6 @@ void LaneSearcher::_Initialize_Members() {
   _LaneSearcherStarted = false;
   _LaneSearcherWorkAssignStarted = false;
   _LaneSearcherPaused = false;
-
-#if !defined(MODE_ONLY_DETECTION)
-  _NavigateDataUpdated = false;
-#endif
 }
 
 void LaneSearcher::_Initialize() {
@@ -92,35 +88,43 @@ bool LaneSearcher::_IsEmptyImageQueue() {
   return _TResult;
 }
 
-#if !defined(MODE_ONLY_DETECTION)
-void *LaneSearcher::_ImageSearcher_WorkerThread(void *Param) {
-	G_LogD->Logging("Func", "into _ImageSearcher_WorkerThread Function");
+void *LaneSearcher::_LaneSearcher_WorkerThread(void *Param) {
+	G_LogD->Logging("Func", "into _LaneSearcher_WorkerThread Function");
 
-	WorkingInformation *_TWorkingInformation = (WorkingInformation *)Param;
-	ImageSearcher *_TEngine = _TWorkingInformation->_PFeatureSearcher;
+  LaneSearcherWorkingInformation *_TWorkingInformation = (LaneSearcherWorkingInformation *)Param;
+  LaneSearcher *_TEngine = _TWorkingInformation->_PFeatureSearcher;
 
-	// scene Feature Points
-	FeatureSets _TObjectFeatures;
+  Mat _TGrayMat;
+  Mat _TSobelX, _TSobelY;
+  Mat _TSobelABSX, _TSobelABSY;
+  Mat _TSobelResult, _TCannyResult;
+  Mat _THoughResult;
+  vector<Vec4i> _THoughLineResult;
 
-	_TObjectFeatures._Descriptor = _TWorkingInformation->_WorkingInfo.img_desc;
-	_TObjectFeatures._Keypoints = _TWorkingInformation->_WorkingInfo.img_key;
+  cvtColor(_TWorkingInformation->_SceneMat, _TGrayMat, CV_BGR2GRAY);
 
-	// Processing via FAST-ORB
-  FeatureDesc _TFeatureDesc(FeatureDescEnum::S_FAST, FeatureDescEnum::S_ORB);
-	int _TX = 0, _TY = 0;
+  medianBlur(_TGrayMat, _TGrayMat, 3);
+  GaussianBlur(_TGrayMat, _TGrayMat, Size(3,3), 0, 0, BORDER_DEFAULT);
 
-	if (_TFeatureDesc.Find_Matchs(_TObjectFeatures, _TWorkingInformation->_SceneFeature, _TX, _TY) == true) {
-		// 일단 나온 좌표부터 Setting. 나온 점은 Feature의 중간점 표시 위치.
-		_TWorkingInformation->_WorkingInfo._DisplayPoint_X = _TX;
-		_TWorkingInformation->_WorkingInfo._DisplayPoint_Y = _TY;
+  // using Sobel mask of Grad X
+  cv::Sobel(_TGrayMat, _TSobelX, CV_16S, 1, 0);
+  convertScaleAbs(_TSobelX, _TSobelABSX);
+  // using Sobel mask of Grad Y
+  cv::Sobel(_TGrayMat, _TSobelY, CV_16S, 0, 1);
+  convertScaleAbs(_TSobelY, _TSobelABSY);
 
-		//G_LogD->Logging("Data", "Name : %s -> X : %d, Y : %d", _TWorkingInformation->_WorkingInfo.comp_name_en.c_str(), _TX, _TY);
+  // Weighted Sobel Result
+  addWeighted(_TSobelABSX, 0.5, _TSobelABSY, 0.5, 0, _TSobelResult);
 
-		_TEngine->_SortedData.push_back(_TWorkingInformation->_WorkingInfo);
-	}
+  // using Canny Edge in Image
+  Canny(_TSobelResult, _TCannyResult, 100, 150);
+  _THoughResult = _TWorkingInformation->_SceneMat.clone();
+
+  // using Hough Line in Image
+  HoughLinesP(_TCannyResult, _TWorkingInformation->_HoughLineResult, 1, CV_PI/180, 50, 20, 10);
+
 	return 0;
 }
-#endif
 
 void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
   G_LogD->Logging("Func", "into _ImageSearcher_WorkAssignThread Function");
@@ -143,9 +147,73 @@ void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
         __MUTEXUNLOCK(_TEngine->_Mutex_InputSceneDataQueue);
 
         // Do Program.
+        Thread _TThread[CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD];
+        LaneSearcherWorkingInformation _TWorkInfo[CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD];
+        int _TMinX = 0, _TMinY = 0, _TMaxX =0, _TMaxY = 0;
 
-        //_TEngine->TLaneSearchedResultCallback(_TBinaryScene);
+        // Working Infomation 생성.
+        for (register int i=0; i<CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++) {
+          if (i==0) { _TMinX = 0; _TMinY = 0; _TMaxX = (_TBinaryScene.cols/2)-1; _TMaxY = (_TBinaryScene.rows/2)-1; }
+          else if (i==1) { _TMinX = _TBinaryScene.cols/2; _TMinY = 0; _TMaxX = _TBinaryScene.cols; _TMaxY = (_TBinaryScene.rows/2)-1; }
+          else if (i==2) { _TMinX = 0; _TMinY = _TBinaryScene.rows/2; _TMaxX = (_TBinaryScene.cols/2)-1; _TMaxY = _TBinaryScene.rows; }
+          else if (i==3) { _TMinX = _TBinaryScene.cols/2; _TMinY = _TBinaryScene.rows/2; _TMaxX = _TBinaryScene.cols; _TMaxY = _TBinaryScene.rows; }
+          Rect _TRectROISrc(_TMinX, _TMinY, _TMaxX, _TMaxY);
+          Mat _TROISrc(_TBinaryScene, _TRectROISrc);
 
+          _TWorkInfo[i]._SceneMat = _TROISrc.clone();
+          _TWorkInfo[i]._WorkingInfoIndex = i;
+          _TWorkInfo[i]._PFeatureSearcher = _TEngine;
+        }
+
+        // Thread를 Joinable하게 만들고, Start 시킨다.
+        for(register int i = 0; i < CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++) {
+          // thread Join Mode.
+          _TThread[i].AttacheMode = true;
+          _TThread[i].StartThread(_LaneSearcher_WorkerThread, &_TWorkInfo[i]);
+        }
+
+        // Join한다. 기다리는데 시간은 보장할 수 없다.
+        for(register int i = 0; i < CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++)
+          _TThread[i].JoinThread();
+
+        ImageStitcher _TImageStitcher;
+        Mat _TH1, _TH2, _TResScene;
+
+        // stitching image
+        _TH1 = _TImageStitcher.Do_StitchingHorizontallyFromTwoImage(_TWorkInfo[0]._SceneMat, _TWorkInfo[1]._SceneMat);
+        _TH2 = _TImageStitcher.Do_StitchingHorizontallyFromTwoImage(_TWorkInfo[2]._SceneMat, _TWorkInfo[3]._SceneMat);
+        _TResScene = _TImageStitcher.Do_StitchingVerticallyFromTwoImage(_TH1, _TH2);
+
+        vector<Vec4i> _THoughLineResult;
+
+        for (int i=0; i<CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++) {
+          for (int j=0; j<_TWorkInfo[i]._HoughLineResult.size(); j++)
+            _THoughLineResult.push_back(_TWorkInfo[i]._HoughLineResult[j]);
+        }
+
+        /*
+        // set line in image at Hough Line result
+        for (size_t i=0; i<_THoughLineResult.size(); i++) {
+          Vec4i _TLine = _THoughLineResult[i];
+          line(_THoughResult, Point(_TLine[0], _TLine[1]), Point(_TLine[2], _TLine[3]), Scalar(0,0,255), 2);
+        }
+        */
+        LaneDetectData _TLaneDetectData;
+        MathematicalFunc _TMathematicalFunc;
+
+        double _TAngle = 0.0f;
+
+        _TLaneDetectData.ImageData = _TResScene;
+
+        // calculation Data.
+        for (int i=0; i<_THoughLineResult.size(); i++){
+          Vec4i _TLine = _THoughLineResult[i];
+          _TAngle += _TMathematicalFunc.Get_AngleToPointByImagePosition(_TLine[0],_TLine[1], _TLine[2], _TLine[3]);
+        }
+        _TAngle /= _THoughLineResult.size();
+        _TLaneDetectData.AngleData = _TAngle;
+
+        _TEngine->TLaneSearchedResultCallback(_TLaneDetectData);
       }
       else
         _TEngine->_InputSceneDataQueueSyncSignal.Wait();
