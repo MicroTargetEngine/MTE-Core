@@ -37,7 +37,7 @@
 #define _CoreDependency_hpp_
 
 #define CLIENT_MOBILE_ALL_MAX_THREAD 64 // Mobile 상에서의 최대 Thread 갯수.
-#define CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD 16 // Thread의 최대 갯수.
+#define CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD 4 // Thread의 최대 갯수.
 //#define CLIENT_MAXIMUM_WORKNUMBER 4 // 일감의 최대 수.
 #define CLIENT_IMAGE_SEARCHER_QUEUE_LIMIT 24 // Image Searcher의 Queue 한계 값.
 #define CLIENT_DATA_QUEUE_LIMIT 60 // Data Queue의 한계 값.

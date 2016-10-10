@@ -80,6 +80,8 @@ typedef struct _FeatureData {
 #if defined(SET_CORE_ENGINE_MODULE_LANESEARCHER)
 typedef struct _LaneDetectData {
   Mat ImageData;
+  double AngleData;
+  /*
   int VPoint_X; // Vanishing Point X
   int VPoint_Y; // Vanishing Point Y
 
@@ -99,6 +101,7 @@ typedef struct _LaneDetectData {
     double _Tdy = (double)RPoint_Y - (double)VPoint_Y;
     return (atan2(_Tdy, _Tdx) * 180.0f) / M_PI;
   }
+   */
 } LaneDetectData;
 #endif
 
