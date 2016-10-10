@@ -122,9 +122,9 @@
   #endif
 #endif // USING_CORE_ENGINE_MODULE_LANESEARCHER
 
-#if defined(USING_CORE_ENGINE_MODULE_STREAMING)
+#if defined(USING_SUB_SUPPORT_MODULE_STREAMING)
   // LaneSearcher is required set of "Common-Thread and Library-GStreamer"
-  #define SET_CORE_ENGINE_MODULE_STREAMING
+  #define SET_SUB_SUPPORT_MODULE_STREAMING
 
   // Common modules.
   #ifndef USING_COMMON_MODULE_THREAD
