@@ -71,7 +71,18 @@ void * Telepathy::Server::Server_ConnectionThread(void *Param) {
 }
 
 void *Telepathy::Server::Server_ReceivingThread(void *Param) {
-	SOCKET _CTlientSocket = (SOCKET) Param;
+#if defined(WINDOWS_SYS)
+  SOCKET
+#elif defined(POSIX_SYS)
+  int
+#endif
+      _CTlientSocket = (
+#if defined(WINDOWS_SYS)
+      SOCKET
+#elif defined(POSIX_SYS)
+      int
+#endif
+      ) Param;
 
 	while (1) {
 		// 현재 Thread는 계속 받는다.
@@ -92,14 +103,23 @@ bool Telepathy::Server::ServerInitialize() {
 	// 이 부분은 통째로 Windows용
 	// 추후 다른 OS도 추가.
 
+#if defined(WINDOWS_SYS)
 	// WSAStartUp
 	if (WSAStartup(0x101, &_WSAData) != 0)
 		return false;
-
+#endif
 	// using IPv4
 	_ServerAddress.sin_family = AF_INET;
 	// 32bit IPv4 address
-	_ServerAddress.sin_addr.s_addr = INADDR_ANY;
+	_ServerAddress.sin_addr.s_addr =
+#if defined(POSIX_SYS)
+      htonl(
+#endif
+      INADDR_ANY
+#if defined(POSIX_SYS)
+      )
+#endif
+      ;
 	//_M_ServerAddress.sin_addr.s_addr = inet_addr(IP_ADDR_LOCAL);
 	// port 사용
 	_ServerAddress.sin_port = htons((u_short)ART_TCP_PORT);
@@ -111,7 +131,13 @@ bool Telepathy::Server::ServerInitialize() {
 	setsockopt(_ServerSocket, IPPROTO_TCP, TCP_NODELAY, (const char *)&_TOptionValue, sizeof(_TOptionValue));
 
 	// Socket이 잘못 되었다면..
-	if (_ServerSocket == INVALID_SOCKET)
+	if (_ServerSocket ==
+#if defined(WINDOWS_SYS)
+      INVALID_SOCKET
+#elif defined(POSIX_SYS)
+      -1
+#endif
+      )
 		return false;
 
 	// socket bind.
@@ -151,8 +177,12 @@ bool Telepathy::Server::ServerStart() {
 // Server 종료.
 void Telepathy::Server::ServerClose() {
 	if (_ServerSocket != NULL) {
-		closesocket(_ServerSocket);
+#if defined(WINDOWS_SYS)
+    closesocket(_ServerSocket);
 		WSACleanup();
+#elif defined(POSIX_SYS)
+    close(_ServerSocket);
+#endif
 		IsInitializeServer = false;
 		IsServerStarted = false;
 	}
@@ -177,14 +207,24 @@ void Telepathy::Server::ServerListentoClient() {
 	int _TClientLength = sizeof(_TClientAddress);
 
 	// Accept를 하여 Socket을 연결한다.
-	_TSocket = accept(_ServerSocket, (struct sockaddr *)&_TClientAddress, &_TClientLength);
+	_TSocket = accept(_ServerSocket, (struct sockaddr *)&_TClientAddress,
+#if defined(POSIX_SYS)
+                    (socklen_t *)
+#endif
+      &_TClientLength);
 
 	int _TOptionValue = 1;
 	// TCP No Delay Option.
 	setsockopt(_TSocket, IPPROTO_TCP, TCP_NODELAY, (const char *)&_TOptionValue, sizeof(_TOptionValue));
 
 	// Client Sockets를 넣어준다.
-	if (_TSocket != INVALID_SOCKET) {
+	if (_TSocket !=
+#if defined(WINDOWS_SYS)
+      INVALID_SOCKET
+#elif defined(POSIX_SYS)
+      -1
+#endif
+      ) {
 		ClientsList _TClientList;
 		// Clientlist Initialize.
 		_TClientList.ClientsListInitialize();
@@ -264,7 +304,13 @@ bool Telepathy::Server::ServerReceiving(
 	return true;
 }
 
-bool Telepathy::Server::SendDataToOne(char *Str, SOCKET ClientSocket) {
+bool Telepathy::Server::SendDataToOne(char *Str,
+#if defined(WINDOWS_SYS)
+                                      SOCKET
+#elif defined(POSIX_SYS)
+                                      int
+#endif
+                                      ClientSocket) {
 	// LIt is List Iterator.
 	//list<SOCKET>::iterator _TLIt;
 	int _TSendStatus = 0;
@@ -363,16 +409,23 @@ void *Telepathy::Client::Client_ReceivingThread(void *Param) {
 
 bool Telepathy::Client::ClientInitialize() {
 //	int _TOptVal;
-	
-	// WSAStartUp
+
+#if defined(WINDOWS_SYS)
+  // WSAStartUp
 	if (WSAStartup(0x101, &_WSAData) != 0)
 		return false;
-
+#endif
 	// Socket Create.
 	_ClientSocket = socket(AF_INET, SOCK_STREAM, 0);
 
 	// Socket이 잘못 되었다면..
-	if (_ClientSocket == INVALID_SOCKET)
+  if (_ClientSocket !=
+      #if defined(WINDOWS_SYS)
+      INVALID_SOCKET
+      #elif defined(POSIX_SYS)
+      -1
+#endif
+      )
 		return false;
 
 	int _TOptionValue = 1;
@@ -393,7 +446,13 @@ bool Telepathy::Client::ClientInitialize() {
 	// using IPv4
 	_ClientAddress.sin_family = AF_INET;
 	// 32bit IPv4 address
-	_ClientAddress.sin_addr.s_addr = *((unsigned long *)_HostEntry->h_addr);
+	_ClientAddress.sin_addr.s_addr = *((
+#if defined(WINDOWS_SYS)
+      unsigned long
+#elif defined(POSIX_SYS)
+      in_addr_t
+#endif
+      *)_HostEntry->h_addr);
 	//_M_ServerAddress.sin_addr.s_addr = inet_addr(IP_ADDR_LOCAL);
 	// port 사용
 	_ClientAddress.sin_port = htons((u_short)ART_TCP_PORT);
@@ -415,14 +474,23 @@ void Telepathy::Client::ClientReceiveStart() {
 void Telepathy::Client::ClientClose() {
 	if (_ClientSocket != NULL) {
 		shutdown(_ClientSocket, 0x02); // BOTH.
+#if defined(WINDOWS_SYS)
 		closesocket(_ClientSocket);
+#elif defined(POSIX_SYS)
+    close(_ClientSocket);
+#endif
 	}
 	IsConnectedClient = false;
 }
 
 bool Telepathy::Client::ClientReceiving() {
 	char _TBuffer[BUFFER_MAX_32767];
-	int _TReadBufferLength;
+#if defined(WINDOWS_SYS)
+	int
+#elif defined(POSIX_SYS)
+  ssize_t
+#endif
+      _TReadBufferLength;
 
 	memset(_TBuffer, NULL, sizeof(_TBuffer));
 
@@ -430,7 +498,7 @@ bool Telepathy::Client::ClientReceiving() {
 #if defined(WINDOWS_SYS)
 		recv(_ClientSocket, _TBuffer, BUFFER_MAX_32767, 0);
 #elif defined(POSIX_SYS)
-
+    recv(_ClientSocket, _TBuffer, BUFFER_MAX_32767, 0);
 #endif
 
 	if (_TReadBufferLength == -1) {

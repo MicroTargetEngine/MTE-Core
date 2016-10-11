@@ -68,6 +68,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <netdb.h>
 #endif
 
 typedef struct _ClientsList {
@@ -124,9 +125,20 @@ public:
 		bool IsServerStarted;
 
 		// server Callback
-		typedef void (* _T_SERVERRECEIVEDCALLBACK)(char *Buffer, SOCKET ClientSocket);
-		typedef void (* _T_ANYCONNECTIONNOTIFIER)(SOCKET ClientSocket);
-
+		typedef void (* _T_SERVERRECEIVEDCALLBACK)(char *Buffer,
+#if defined(WINDOWS_SYS)
+                                               SOCKET
+#elif defined(POSIX_SYS)
+                                               int
+#endif
+                                               ClientSocket);
+		typedef void (* _T_ANYCONNECTIONNOTIFIER)(
+#if defined(WINDOWS_SYS)
+                                              SOCKET
+#elif defined(POSIX_SYS)
+                                              int
+#endif
+                                               ClientSocket);
 		// Server Receive Callback Pointer.
 		_T_SERVERRECEIVEDCALLBACK TServerReceivedCallback;
 		_T_ANYCONNECTIONNOTIFIER TAnyConnentionNotifier;
@@ -135,9 +147,21 @@ public:
 		bool ServerStart();
 		void ServerClose();
 		void ServerListentoClient();
-		bool ServerReceiving(SOCKET ClientSocket);
+		bool ServerReceiving(
+#if defined(WINDOWS_SYS)
+        SOCKET
+#elif defined(POSIX_SYS)
+        int
+#endif
+        ClientSocket);
 
-		bool SendDataToOne(char *Str, SOCKET ClientSocket);
+		bool SendDataToOne(char *Str,
+#if defined(WINDOWS_SYS)
+                       SOCKET
+#elif defined(POSIX_SYS)
+                       int
+#endif
+                       ClientSocket);
 		void SendDataToAll(char *Str);
 
 		// using pthread
@@ -157,7 +181,9 @@ public:
 		SOCKET _ClientSocket;
 		SOCKADDR_IN _ClientAddress;
 #elif defined(POSIX_SYS)
-    HOSTENT *_HostEntry;
+    hostent *_HostEntry;
+    int _ClientSocket;
+    sockaddr_in _ClientAddress;
 #endif		
 	public:
 		Client();
