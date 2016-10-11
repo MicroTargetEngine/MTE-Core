@@ -89,7 +89,7 @@ bool LaneSearcher::_IsEmptyImageQueue() {
 }
 
 void *LaneSearcher::_LaneSearcher_WorkerThread(void *Param) {
-	G_LogD->Logging("Func", "into _LaneSearcher_WorkerThread Function");
+	//G_LogD->Logging("Func", "into _LaneSearcher_WorkerThread Function");
 
   LaneSearcherWorkingInformation *_TWorkingInformation = (LaneSearcherWorkingInformation *)Param;
   LaneSearcher *_TEngine = _TWorkingInformation->_PFeatureSearcher;
@@ -127,7 +127,7 @@ void *LaneSearcher::_LaneSearcher_WorkerThread(void *Param) {
 }
 
 void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
-  G_LogD->Logging("Func", "into _ImageSearcher_WorkAssignThread Function");
+  //G_LogD->Logging("Func", "into _ImageSearcher_WorkAssignThread Function");
 
   LaneSearcher *_TEngine = (LaneSearcher *)Param;
 
@@ -235,7 +235,7 @@ void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
 }
 
 void *LaneSearcher::_LaneSearcher_MainThread(void *Param) {
-  G_LogD->Logging("Func", "into _ImageSearcher_MainThread Function");
+  //G_LogD->Logging("Func", "into _ImageSearcher_MainThread Function");
 
   LaneSearcher *_TEngine = (LaneSearcher *)Param;
   Thread _TImageSearcherWorkAssignThread;
@@ -273,7 +273,7 @@ void *LaneSearcher::_LaneSearcher_MainThread(void *Param) {
 }
 
 void LaneSearcher::Start_LaneSearcher() {
-  G_LogD->Logging("Func", "into Start_ImageSearcher Function");
+  //G_LogD->Logging("Func", "into Start_ImageSearcher Function");
 
   if (_LaneSearcherActivated != true) {
     _LaneSearcherActivated = true;
@@ -283,7 +283,7 @@ void LaneSearcher::Start_LaneSearcher() {
 }
 
 void LaneSearcher::Stop_LaneSearcher() {
-  G_LogD->Logging("Func", "into Stop_ImageSearcher Function");
+  //G_LogD->Logging("Func", "into Stop_ImageSearcher Function");
 
   if (_LaneSearcherActivated != false) {
     _LaneSearcherActivated = false;
@@ -293,14 +293,14 @@ void LaneSearcher::Stop_LaneSearcher() {
 }
 
 void LaneSearcher::Pause_LaneSearcher() {
-  G_LogD->Logging("Func", "into Pause_ImageSearcher Function");
+  //G_LogD->Logging("Func", "into Pause_ImageSearcher Function");
 
   if (_LaneSearcherPaused != true)
     _LaneSearcherPaused = true;
 }
 
 void LaneSearcher::Resume_LaneSearcher() {
-  G_LogD->Logging("Func", "into Resume_ImageSearcher Function");
+  //G_LogD->Logging("Func", "into Resume_ImageSearcher Function");
 
   if (_LaneSearcherPaused != false) {
     _LaneSearcherPaused = false;
@@ -311,7 +311,7 @@ void LaneSearcher::Resume_LaneSearcher() {
 }
 
 void LaneSearcher::Push_ImageToQueue(Mat &Scene) {
-  G_LogD->Logging("Func", "into Push_ImageToQueue Function, %d %d", _LaneSearcherPaused, _LaneSearcherActivated);
+  //G_LogD->Logging("Func", "into Push_ImageToQueue Function, %d %d", _LaneSearcherPaused, _LaneSearcherActivated);
 
   // 중간에 SearchEngine이 중단될 수 있는 상황(_InputImageQueue전체가 Flush되는 상황)이
   // 벌어질 수도 있기 때문에 반드시 Mutex 걸어준다.

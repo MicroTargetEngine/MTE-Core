@@ -107,16 +107,16 @@ void SerialAdapter::_StartSerial() {
     //_Thread.AttacheMode = true;
     _Thread.StartThread(_SerialAdapter_WorkerThread, this);
   }
-  else
-    printf("Not Started. Error.\n");
+  //else
+    //printf("Not Started. Error.\n");
 }
 
 void SerialAdapter::_StopSerial() {
   if (_SerialPool[0].fd != -1) {
     _SerialAdapterStarted = false;
   }
-  else
-    printf("Not Started. Error.\n");
+  //else
+    //printf("Not Started. Error.\n");
 }
 
 void *SerialAdapter::_SerialAdapter_WorkerThread(void *Param) {
@@ -165,12 +165,12 @@ void *SerialAdapter::_SerialAdapter_WorkerThread(void *Param) {
     else {
       if (_TEngine->_SerialPool[0].revents & POLLHUP) {
         _TEngine->_StopSerial();
-        printf("Serial Connection is broken. Connection Closed.");
+        //printf("Serial Connection is broken. Connection Closed.");
         break;
       }
       else if (_TEngine->_SerialPool[0].revents & POLLNVAL) {
         _TEngine->_StopSerial();
-        printf("File Desc invaild. Connection Closed.");
+        //printf("File Desc invaild. Connection Closed.");
         break;
       }
       else if (_TEngine->_SerialPool[0].revents & POLLOUT) {
@@ -231,7 +231,7 @@ bool SerialAdapter::Connect_Serial() {
     _StartSerial();
   }
   else {
-    printf("Connection Failed.");
+    //printf("Connection Failed.");
     return false;
   }
   return true;
@@ -244,8 +244,8 @@ void SerialAdapter::Disconnect_Serial() {
         _SerialPool[0].fd != -1;
     }
   }
-  else
-    printf("Not Disconnected. Error.\n");
+  //else
+    //printf("Not Disconnected. Error.\n");
 }
 
 void SerialAdapter::Send(string CommandStr) {
@@ -255,8 +255,8 @@ void SerialAdapter::Send(string CommandStr) {
       write(_SerialPool[0].fd, CommandStr.c_str(), CommandStr.length());
     }
   }
-  else
-    printf("Not Sended. Error.\n");
+  //else
+    //printf("Not Sended. Error.\n");
 }
 
 TerminalOpt SerialAdapter::Get_SerialDeviceOption() {
