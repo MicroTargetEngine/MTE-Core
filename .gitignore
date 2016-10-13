@@ -5,6 +5,7 @@
 *.cache
 tools/PkgConf
 src/[Ee]xperimental/*
+build
 
 # this file is “NOT” ignoring.
 !.gitignore
