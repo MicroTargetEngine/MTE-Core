@@ -36,7 +36,7 @@
 #===============================================================================
 
 set(env_var
-    "ProjectRoot;ProjectCMakeDirName;DevEnvDirName;ScriptsDirName;SrcDirName;ToolDirName;3rdpartyDirName;CrossToolName;PkgConfigToolName")
+    "ProjectCMakeDirName;DevEnvDirName;ScriptsDirName;SrcDirName;ToolDirName;3rdpartyDirName;CrossToolName;PkgConfigToolName")
 
 function(matching_global_env compare_name_matching)
   foreach(i ${env_var})
@@ -48,9 +48,9 @@ function(matching_global_env compare_name_matching)
 endfunction()
 
 function(matching_env_var compare_name env_var_string)
-  if("${compare_name}" MATCHES "ProjectRoot")
-    set(env_var_ProjectRoot ${env_var_string})
-  elseif("${compare_name}" MATCHES "ProjectCMakeDirName")
+  #if("${compare_name}" MATCHES "ProjectRoot")
+  #  set(env_var_ProjectRoot ${env_var_string})
+  if("${compare_name}" MATCHES "ProjectCMakeDirName")
     set(env_var_ProjectCMakeDirName "${env_var_string}")
   elseif("${compare_name}" MATCHES "DevEnvDirName")
     set(env_var_DevEnvDirName "${env_var_string}")
@@ -68,7 +68,7 @@ function(matching_env_var compare_name env_var_string)
     set(env_var_PkgConfigToolName "${env_var_string}")
   endif()
 
-  set(env_var_ProjectRoot ${env_var_ProjectRoot} PARENT_SCOPE)
+  #set(env_var_ProjectRoot ${env_var_ProjectRoot} PARENT_SCOPE)
   set(env_var_ProjectCMakeDirName "${env_var_ProjectCMakeDirName}" PARENT_SCOPE)
   set(env_var_DevEnvDirName "${env_var_DevEnvDirName}" PARENT_SCOPE)
   set(env_var_ScriptsDirName "${env_var_ScriptsDirName}" PARENT_SCOPE)
@@ -107,7 +107,8 @@ function(set_global_env proj_root)
     endif()
   endforeach()
 
-  set(env_var_ProjectRoot ${env_var_ProjectRoot} PARENT_SCOPE)
+  set(env_var_ProjectRoot ${proj_root} PARENT_SCOPE)
+  #set(env_var_ProjectRoot ${env_var_ProjectRoot} PARENT_SCOPE)
   set(env_var_ProjectCMakeDirName ${env_var_ProjectCMakeDirName} PARENT_SCOPE)
   set(env_var_DevEnvDirName ${env_var_DevEnvDirName} PARENT_SCOPE)
   set(env_var_ScriptsDirName ${env_var_ScriptsDirName} PARENT_SCOPE)
@@ -157,25 +158,30 @@ function(set_toolchain_env)
     endif()
   endif()
 
-  #set(Proj_src_Dir ${FireBase_Core_SOURCE_DIR})
-  execute_process(
-      COMMAND ./pkgtool.sh --now
-      WORKING_DIRECTORY ${_va_scripts_dir}
-      #RESULT_VARIABLE _now_pkg_result
-      OUTPUT_VARIABLE _now_pkg_result
-  )
-  string(REGEX REPLACE "\n" "" _now_pkg_result "${_now_pkg_result}")
-  message(STATUS "** Now Selected Package : ${_now_pkg_result}")
+  if(NATIVE_TARGET_COMPILE MATCHES 1)
+    set(_now_pkg_result "arm_RPi2")
+    message(STATUS "** Now Selected Package : ${_now_pkg_result}")
+  else()
+    #set(Proj_src_Dir ${FireBase_Core_SOURCE_DIR})
+    execute_process(
+        COMMAND ./pkgtool.sh --now
+        WORKING_DIRECTORY ${_va_scripts_dir}
+        #RESULT_VARIABLE _now_pkg_result
+        OUTPUT_VARIABLE _now_pkg_result
+    )
+    string(REGEX REPLACE "\n" "" _now_pkg_result "${_now_pkg_result}")
+    message(STATUS "** Now Selected Package : ${_now_pkg_result}")
 
-  ## Set all Complier Environments(when a compile time).
-  ## I'll using gcc(g++) is 4.8.5, arm-linux-gnueabi-gcc(g++) is 4.9.3(made by crosstool-NG 1.22)
-  message(STATUS "** Loading Toolchain File")
-  set(CMAKE_TOOLCHAIN_FILE "${_va_project_dir}/cmake/platforms/${_now_pkg_result}.toolchain.cmake")
+    ## Set all Complier Environments(when a compile time).
+    ## I'll using gcc(g++) is 4.8.5, arm-linux-gnueabi-gcc(g++) is 4.9.3(made by crosstool-NG 1.22)
+    message(STATUS "** Loading Toolchain File")
+    set(CMAKE_TOOLCHAIN_FILE "${_va_project_dir}/cmake/platforms/${_now_pkg_result}.toolchain.cmake")
 
-  include(${CMAKE_TOOLCHAIN_FILE})
+    include(${CMAKE_TOOLCHAIN_FILE})
 
-  message(STATUS "** Now Selected Toolchain File : ${CMAKE_TOOLCHAIN_FILE}")
-  #message(STATUS "** CMAKE_C_COMPILER : ${CMAKE_C_COMPILER}")
+    message(STATUS "** Now Selected Toolchain File : ${CMAKE_TOOLCHAIN_FILE}")
+    #message(STATUS "** CMAKE_C_COMPILER : ${CMAKE_C_COMPILER}")
+  endif()
 
   message(STATUS "** Loading Project \"CMAKE_CXX_FLAGS\"")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wpragmas -Winvalid-noreturn") # -std=c++11

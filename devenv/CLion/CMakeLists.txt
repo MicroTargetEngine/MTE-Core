@@ -85,4 +85,7 @@ target_link_libraries(FireBase_Core pthread ${LIBRARY_MODULES})
 #message(STATUS "** dirs :${src_directories}")
 
 ## 8. install binary
-install(TARGETS FireBase_Core RUNTIME DESTINATION bin)
+install(TARGETS FireBase_Core
+    ARCHIVE DESTINATION ${_va_project_dir}/bulid/lib
+    LIBRARY DESTINATION ${_va_project_dir}/bulid/lib
+    RUNTIME DESTINATION ${_va_project_dir}/bulid)

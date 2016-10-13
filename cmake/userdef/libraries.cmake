@@ -40,7 +40,7 @@ set(LIBRARY_DIRS "")
 set(INCLUDE_DIRS "")
 
 ## set "PKG_CONFIG_EXECUTABLE" variable
-set(PKG_CONFIG_EXECUTABLE "${_va_pkgconf_dir}/Pkgconf_${_va_pkg_name}/pkgconf")
+#set(PKG_CONFIG_EXECUTABLE "${_va_pkgconf_dir}/Pkgconf_${_va_pkg_name}/pkgconf")
 
 ## if using function is "pkg_check_modules" and "pkg_search_module"
 ## then including cmake default module is "FindPkgConfig.cmake"
@@ -68,6 +68,7 @@ pkg_check_modules(GSTREAMER_VIDEO_1_0 gstreamer-video-1.0)
 set(LIBRARY_MODULES "${LIBRARY_MODULES};${GSTREAMER_VIDEO_1_0_LIBRARIES}")
 set(LIBRARY_DIRS "${LIBRARY_DIRS};${GSTREAMER_VIDEO_1_0_LIBRARY_DIRS}")
 set(INCLUDE_DIRS "${INCLUDE_DIRS};${GSTREAMER_VIDEO_1_0_INCLUDE_DIRS}")
+
 ## 2-2. GStreamer Dependent library(libpcre, libffi)
 pkg_check_modules(LIBPCRE libpcre)
 set(LIBRARY_MODULES "${LIBRARY_MODULES};${LIBPCRE_LIBRARIES}")
