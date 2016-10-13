@@ -42,18 +42,18 @@
 
 #if defined(_ExternalStreamViewer_hpp_)
 
-//#include "Thread.hpp"
-
 ExternalStreamViewer *G_ExternalStreamViewer;
 
 void ExternalStreamViewer::_Initialize_Members() {
   _ExternalStreamViewerActivated = false;
+  _ExternalStreamViewerStarted = false;
   _LoopCount = 0;
   _GstApp = &s_app;
 }
 
 void ExternalStreamViewer::_Deinitialize_Members() {
   _ExternalStreamViewerActivated = false;
+  _ExternalStreamViewerStarted = false;
   _LoopCount = 0;
 }
 
@@ -67,6 +67,16 @@ void ExternalStreamViewer::_Deinitialize() {
   G_ExternalStreamViewer = NULL;
 }
 
+bool ExternalStreamViewer::_IsEmptyImageQueue() {
+  bool _TResult = false;
+
+  __MUTEXLOCK(_Mutex_ImageQueue);
+  _TResult = _ImageQueue.empty();
+  __MUTEXUNLOCK(_Mutex_ImageQueue);
+
+  return _TResult;
+}
+
 void ExternalStreamViewer::_SettingExternalStreamViewer() {
   GstFlowReturn _TGstFlowReturn;
 
@@ -75,45 +85,47 @@ void ExternalStreamViewer::_SettingExternalStreamViewer() {
   _G_Loop = g_main_loop_new(NULL, TRUE);
 
   _Pipeline = gst_pipeline_new("gstreamer-encoder");
-  if (!_Pipeline) { g_print("Error creating Pipeline, exiting..."); }
+  if (!_Pipeline) { g_print("Error creating Pipeline, exiting...\n"); }
 
   _GstApp->videosrc = gst_element_factory_make("appsrc", "videosrc");
-  if (!_GstApp->videosrc) { g_print("Error creating source element, exiting..."); }
+  if (!_GstApp->videosrc) { g_print("Error creating source element, exiting...\n"); }
 
   _GstApp->queue = gst_element_factory_make("queue", "queue");
-  if (!_GstApp->queue) { g_print("Error creating queue element, exiting..."); }
+  if (!_GstApp->queue) { g_print("Error creating queue element, exiting...\n"); }
 
   _GstApp->filter = gst_element_factory_make("capsfilter", "filter");
-  if (!_GstApp->filter) { g_print("Error creating filter, exiting..."); }
+  if (!_GstApp->filter) { g_print("Error creating filter, exiting...\n"); }
 
   _GstApp->videoscale = gst_element_factory_make("videoscale", "videoscale");
-  if (!_GstApp->videoscale) { g_print("Error creating videoscale, exiting..."); }
+  if (!_GstApp->videoscale) { g_print("Error creating videoscale, exiting...\n"); }
 
+  //_GstApp->videoenc = gst_element_factory_make("vp8enc", "videoenc");
   _GstApp->videoenc = gst_element_factory_make("x264enc", "videoenc");
-  if (!_GstApp->videoenc) { std::cout << "Error creating encoder, exiting..."; }
+  if (!_GstApp->videoenc) { std::cout << "Error creating encoder, exiting...\n"; }
 
+  //_GstApp->rtppay = gst_element_factory_make("rtpvp8pay", "rtppay");
   _GstApp->rtppay = gst_element_factory_make("rtph264pay", "rtppay");
-  if (!_GstApp->rtppay) { std::cout << "Error creating rtppay, exiting..."; }
+  if (!_GstApp->rtppay) { std::cout << "Error creating rtppay, exiting...\n"; }
 
   _GstApp->gdppay = gst_element_factory_make("gdppay", "gdppay");
-  if (!_GstApp->gdppay) { std::cout << "Error creating gdppay, exiting..."; }
+  if (!_GstApp->gdppay) { std::cout << "Error creating gdppay, exiting...\n"; }
 
   _GstApp->ffmpeg = gst_element_factory_make("videoconvert", "ffmpeg");  //!!!!!! ffenc_mpeg2video
-  if (!_GstApp->ffmpeg) { g_print("Error creating ffmpegcolorspace, exiting..."); }
+  if (!_GstApp->ffmpeg) { g_print("Error creating ffmpegcolorspace, exiting...\n"); }
 
   _GstApp->ffmpeg2 = gst_element_factory_make("videoconvert", "ffmpeg2");  //!!!!!! ffenc_mpeg2video
-  if (!_GstApp->ffmpeg) { g_print("Error creating ffmpegcolorspace, exiting..."); }
+  if (!_GstApp->ffmpeg) { g_print("Error creating ffmpegcolorspace, exiting...\n"); }
 
   _GstApp->sink = gst_element_factory_make("tcpserversink", "sink");
-  if (!_GstApp->sink) { g_print("Error creating sink, exiting..."); }
+  if (!_GstApp->sink) { g_print("Error creating sink, exiting...\n"); }
 
   g_print("Elements are created\n");
 
-  g_object_set(G_OBJECT (_GstApp->sink), "host", VIEWER_IP, NULL); //
+  g_object_set(G_OBJECT (_GstApp->sink), "host", "127.0.0.1", NULL); //
   g_object_set(G_OBJECT (_GstApp->sink), "port", _Port, NULL);
   g_object_set(G_OBJECT (_GstApp->sink), "sync", FALSE, NULL);
 
-  g_object_set(G_OBJECT (_GstApp->videoenc), "bitrate", 256, NULL);
+  //g_object_set(G_OBJECT (_GstApp->videoenc), "bitrate", 256, NULL);
   g_object_set(G_OBJECT (_GstApp->videoenc), "noise-reduction", 10000, NULL);
   gst_util_set_object_arg(G_OBJECT (_GstApp->videoenc), "tune", "zerolatency");
   gst_util_set_object_arg(G_OBJECT (_GstApp->videoenc), "pass", "qual");
@@ -188,54 +200,55 @@ void ExternalStreamViewer::_CloseExternalStreamViewer() {
 
 gboolean ExternalStreamViewer::_NeedData_Callback(App *__App) {
   static GstClockTime timestamp = 0;
-  GstBuffer *_TGstBuffer;
-  guint _TGstBuffersize;
-  GstFlowReturn _TGstFlowReturn;
-  GstMapInfo _TGstMapInfo;
 
-  G_ExternalStreamViewer->_LoopCount++;
+  if (G_ExternalStreamViewer->_IsEmptyImageQueue() != true) {
+    GstBuffer *_TGstBuffer;
+    guint _TGstBuffersize;
+    GstFlowReturn _TGstFlowReturn;
+    GstMapInfo _TGstMapInfo;
 
-  // lock queue.
-  __MUTEXLOCK(G_ExternalStreamViewer->_Mutex_ImageQueue);
+    G_ExternalStreamViewer->_LoopCount++;
 
-  Mat _TMat = G_ExternalStreamViewer->_ImageQueue.front();
+    // lock queue.
+    __MUTEXLOCK(G_ExternalStreamViewer->_Mutex_ImageQueue);
 
-  _TGstBuffersize = _TMat.cols * _TMat.rows * _TMat.channels();
-  _TGstBuffer = gst_buffer_new_and_alloc(_TGstBuffersize);
+    Mat _TMat = G_ExternalStreamViewer->_ImageQueue.front();
 
-  uchar *IMG_data = _TMat.data;
+    _TGstBuffersize = _TMat.cols * _TMat.rows * _TMat.channels();
+    _TGstBuffer = gst_buffer_new_and_alloc(_TGstBuffersize);
 
-  // unlock queue.
-  __MUTEXUNLOCK(G_ExternalStreamViewer->_Mutex_ImageQueue);
+    uchar *IMG_data = _TMat.data;
 
-  // copy at buffer
-  if (gst_buffer_map(_TGstBuffer, &_TGstMapInfo, (GstMapFlags) GST_MAP_WRITE)) {
-    memcpy(_TGstMapInfo.data, IMG_data, _TGstBuffersize);
-    gst_buffer_unmap(_TGstBuffer, &_TGstMapInfo);
+    // unlock queue.
+    __MUTEXUNLOCK(G_ExternalStreamViewer->_Mutex_ImageQueue);
+
+    // copy at buffer
+    if (gst_buffer_map(_TGstBuffer, &_TGstMapInfo, (GstMapFlags) GST_MAP_WRITE)) {
+      memcpy(_TGstMapInfo.data, IMG_data, _TGstBuffersize);
+      gst_buffer_unmap(_TGstBuffer, &_TGstMapInfo);
+    }
+    else g_print("Buffer Copy Error.");
+
+    g_signal_emit_by_name(__App->videosrc, "push-buffer", _TGstBuffer, &_TGstFlowReturn);
+
+    //GST_DEBUG ("everything allright in cb_need_data");
+
+    if (_TGstFlowReturn != GST_FLOW_OK) {
+      g_print("Error\n");
+      //GST_DEBUG ("something wrong in cb_need_data");
+      g_main_loop_quit(G_ExternalStreamViewer->_G_Loop);
+    }
+
+    gst_buffer_unref(_TGstBuffer);
+
   }
-  else g_print("Buffer Copy Error.");
-
-  //segnalo che ho abbastanza dati da fornire ad appsrc:
-  g_signal_emit_by_name(__App->videosrc, "push-buffer", _TGstBuffer, &_TGstFlowReturn);
-
-  //GST_DEBUG ("everything allright in cb_need_data");
-
-  //nel caso di errore esce dal loop:
-  if (_TGstFlowReturn != GST_FLOW_OK) {
-    g_print("Error\n");
-    //GST_DEBUG ("something wrong in cb_need_data");
-    g_main_loop_quit(G_ExternalStreamViewer->_G_Loop);
-  }
-
-  gst_buffer_unref(_TGstBuffer);
-
   return TRUE;
+  //return FALSE;
 }
 
 void ExternalStreamViewer::_StartFeed_Callback(GstElement *__Pipeline, guint __Size, App *__App) {
   if (__App->sourceid == 0) {
     //GST_DEBUG ("start feeding");
-    //esegue all'infinito cb_need_data (si ferma qui):
     __App->sourceid = g_timeout_add(67, (GSourceFunc) _NeedData_Callback, __App);
     //app->sourceid = g_timeout_add (1, (GSourceFunc) cb_need_data, app);
     //app->sourceid = g_idle_add ((GSourceFunc) cb_need_data, app);
@@ -308,6 +321,7 @@ void ExternalStreamViewer::_CheckLogHandler_Callback(const gchar *const __LogDom
 void *ExternalStreamViewer::_ExternalStreamViewer_WorkerThread(void *Param) {
   ExternalStreamViewer *_TStreamViewer = (ExternalStreamViewer *) Param;
 
+  _TStreamViewer->_ExternalStreamViewerStarted = true;
   // Setting StreamViewer.
   _TStreamViewer->_SettingExternalStreamViewer();
 
@@ -318,6 +332,7 @@ void *ExternalStreamViewer::_ExternalStreamViewer_WorkerThread(void *Param) {
   g_main_loop_run (_TStreamViewer->_G_Loop);
 
   _TStreamViewer->_CloseExternalStreamViewer();
+  _TStreamViewer->_ExternalStreamViewerStarted = false;
 
   return 0;
 }
@@ -340,6 +355,9 @@ void ExternalStreamViewer::Stop_ExternalStreamViewer() {
 
 void ExternalStreamViewer::Push_ImageQueue(Mat __Image) {
   if (_ExternalStreamViewerActivated == true) {
+    if (_ImageQueue.size() > 2)
+      _ImageQueue.pop();
+
     __MUTEXLOCK(_Mutex_ImageQueue);
     _ImageQueue.push(__Image);
     __MUTEXUNLOCK(_Mutex_ImageQueue);

@@ -49,31 +49,29 @@
 
 #include <queue>
 
-#define RESOLUTION_X 640
-#define RESOLUTION_Y 480
+#define STREAM_RESOLUTION_X 640
+#define STREAM_RESOLUTION_Y 480
 
 #define VIEWER_IP "127.0.0.1"
-#define VIEWER_PORT 5003
-
-typedef struct _App App;
-
-struct _App {
-  GstElement *ffmpeg;
-  GstElement *ffmpeg2;
-  GstElement *rtppay, *gdppay;
-  GstElement *videoenc;
-  GstElement *videosrc;
-  GstElement *sink;
-  GstElement *videoscale;
-  GstElement *filter;
-  guint sourceid;
-  GstElement *queue;
-  GTimer *timer;
-};
-App s_app;
+#define VIEWER_PORT 5002
 
 class ExternalStreamViewer {
 private:
+  typedef struct _App {
+    GstElement *ffmpeg;
+    GstElement *ffmpeg2;
+    GstElement *rtppay, *gdppay;
+    GstElement *videoenc;
+    GstElement *videosrc;
+    GstElement *sink;
+    GstElement *videoscale;
+    GstElement *filter;
+    guint sourceid;
+    GstElement *queue;
+    GTimer *timer;
+  }App;
+  App s_app;
+
   GMainLoop *_G_Loop;
   GstCaps *_GstCapsRGB;
   GstCaps *_GstCapsYUV;
@@ -90,6 +88,7 @@ private:
   int _LoopCount;
 
   bool _ExternalStreamViewerActivated;
+  bool _ExternalStreamViewerStarted;
 
   Thread _Thread;
   ThreadMutex _Mutex_ImageQueue;
@@ -98,6 +97,8 @@ private:
   void _Deinitialize_Members();
   void _Initialize();
   void _Deinitialize();
+
+  bool _IsEmptyImageQueue();
 
   void _SettingExternalStreamViewer();
 
@@ -118,7 +119,7 @@ private:
 
 public:
   ExternalStreamViewer() :
-      _Res_X(RESOLUTION_X), _Res_Y(RESOLUTION_Y), _Port(VIEWER_PORT) { _Initialize(); }
+      _Res_X(STREAM_RESOLUTION_X), _Res_Y(STREAM_RESOLUTION_Y), _Port(VIEWER_PORT) { _Initialize(); }
   ExternalStreamViewer(int __Res_X, int __Res_Y) :
       _Res_X(__Res_X), _Res_Y(__Res_Y), _Port(VIEWER_PORT) { _Initialize(); }
   ExternalStreamViewer(int __Res_X, int __Res_Y, int __PORT) :
@@ -135,6 +136,7 @@ public:
   IMPLEMENT_GET_SET(int, ResolutionX, _Res_X)
   IMPLEMENT_GET_SET(int, ResolutionY, _Res_Y)
   IMPLEMENT_GET_SET(int, Port, _Port)
+  IMPLEMENT_GET(bool, ExternalStreamViewerStarted, _ExternalStreamViewerStarted);
 };
 
 #endif // _ExternalStreamViewer_hpp_
