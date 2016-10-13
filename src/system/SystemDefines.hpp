@@ -47,15 +47,18 @@
     #define EXEC_FILENAME art_test.exe
   #endif
 #elif defined(POSIX_SYS)
-#if defined(USING_QT)
-#define EXEC_FILENAME art
-#endif
+  #if defined(USING_QT)
+    #define EXEC_FILENAME art
+  #endif
 #endif
 
 #define ENGINE_EXEC_VER "0.1.0"
 
 #define IP_ADDR_LOCAL "127.0.0.1"
-#define ART_TCP_PORT 8508
-#define TCP_LISTEN_QUEUE 30
+#define ART_TCP_PORT 8506
+#define TCP_LISTEN_QUEUE 200
+
+#define TCP_MAX_CONNECTIONS TCP_LISTEN_QUEUE
+#define POLL_MAX_CONNECTIONS (TCP_MAX_CONNECTIONS+1)
 
 #endif

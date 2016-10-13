@@ -53,6 +53,7 @@
 // Buffer Size Defines.
 #define BUFFER_MAX_16 16
 #define BUFFER_MAX_32 32
+#define BUFFER_MAX_64 64
 #define BUFFER_MAX_128 128
 #define BUFFER_MAX_256 256
 #define BUFFER_MAX_512 512
