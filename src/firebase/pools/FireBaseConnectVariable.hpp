@@ -38,24 +38,19 @@
 
 #include <string>
 
-typedef struct _SendInformations {
-  // 0 : CLI(for Test), 1 : Ethernet(for Command), 2 : Serial(between Embedded and Embedded)
+// 0 : CLI(for Test), 1 : Ethernet(for Command), 2 : Serial(between Embedded and Embedded)
+typedef struct _ConnectInformation {
   int Types;
-  string UserID;
-  string Result;
+  std::string UserID;
+  int Socket;
+  _ConnectInformation() : Types(-1), UserID(""), Socket(-1) {}
+} ConnectInformation;
 
-  _SendInformations() : Types(-1), UserID(""), Result("") { }
-
-} SendInformations;
-
-typedef struct _RecvInformations {
-  // 0 : CLI(for Test), 1 : Ethernet(for Command), 2 : Serial(between Embedded and Embedded)
-  int Types;
-  string UserID;
-  string Command;
-
-  _RecvInformations() : Types(-1), UserID(""), Command("") { }
-
-} RecvInformations;
+typedef struct _MessageInformations {
+  ConnectInformation UserInformation;
+  std::string RecvMessage;
+  std::string SendMessage;
+  _MessageInformations() : RecvMessage(""), SendMessage("") { }
+} MessageInformations;
 
 #endif // _FireBaseAdapterVariable_hpp_
