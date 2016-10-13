@@ -38,7 +38,8 @@
 
 int main(int argc, char* argv[]){
 	FireBaseAdapter _Adapter;
-	_Adapter.Start_Adapter();
+
+	_Adapter.Start_GetCommand();
 
 	return 0;
 }

@@ -69,6 +69,7 @@ void FireBaseEngine::_Initialize() {
 	G_Engine = this;
 
 	_FeatureSearcher = NULL;
+  _LaneSearcher = NULL;
 
 	TExternalFeatureSearchingResultPassingCallback = NULL;
 	TExternalLaneSearchingResultPassingCallback = NULL;
@@ -208,7 +209,7 @@ void FireBaseEngine::_FireBaseEngine_FeatureSearchedResult(
 	// 시간 갱신.
 	_TBeforeTime = _TClock;
 #else
-
+	// 지금부터 코딩 신나게 들어가야함.
 #endif
 
   // 다 완료 되었으면, Queue에 집어 넣는다.

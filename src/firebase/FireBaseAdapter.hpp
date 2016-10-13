@@ -40,14 +40,11 @@
 
 #include "FireBaseEngine.hpp"
 
-#include "FireBaseAdapterVariable.hpp"
+#include "FireBaseConnectPool.hpp"
+#include "FireBaseVideoPool.hpp"
 
-#if defined(SET_DEVICE_MMAL)
-#include "mmalAdapter.hpp"
-#endif
-#if defined(SET_DEVICE_SERIAL)
-#include "SerialAdapter.hpp"
-#endif
+// for Streaming
+#include "ExternalStreamViewer.hpp"
 
 #if defined(WINDOWS_SYS)
 #include "ExConsole/ConsoleLogger.hpp"
@@ -56,32 +53,36 @@
 class FireBaseAdapter {
 private:
 	FireBaseEngine *_FireBaseEngine;
+  FireBaseConnectPool _FireBaseConnectPool;
+  FireBaseVideoPool _FireBaseVideoPool;
+  ExternalStreamViewer _ExternalStreamViewer;
 
-  SerialAdapter _SerialAdapter;
+	Thread _ParseCommandThread;
+  Thread _VideoPassingThroughProcessingThread;
 
-	Thread _InputCLICommandThread, _InputEthernetCommandThread, _InputSerialCommandThread, _ParseCommandThread;
-  Thread _VisionThread;
+  queue<MessageInformations> _RecvCommandQueue;
+  ThreadMutex _Mutex_RecvCommandQueue;
+  SyncSignal _SyncSignal_RecvCommandQueue;
 
-  ThreadMutex _ViewPointMutex;
-  ThreadMutex _Mutex_CommandStrQueue;
+  queue<MessageInformations> _SendCommandQueue;
+  ThreadMutex _Mutex_SendCommandQueue;
+  SyncSignal _SyncSignal_SendCommandQueue;
 
-  SyncSignal _CommandStrQueueSyncSignal;
+  queue<Mat> _ProcessingVideoQueue;
+  ThreadMutex _Mutex_ProcessingVideoQueue;
+  SyncSignal _SyncSignal_ProcessingVideoQueue;
 
-	vector<pair<int, int> > _ViewPoint;
-	queue<RecvInformations> _CommandStrQueue;
+  vector<pair<int, int> > _ViewPoint;
+  ThreadMutex _Mutex_ViewPoint;
 
-	Mat _ViewMat;
+  int _CamWidth;
+  int _CamHeight;
+  int _CamPort;
 
-	string _CLIID;
-	string _SerialID;
-
-  int _CamResWidth;
-  int _CamResHeight;
-  int _CamNum;
-
-	//char *_Command;
 	bool _AdapterStarted;
 	bool _EngineStarted;
+
+  bool _ControlEnable;
 
 #if defined(WINDOWS_SYS)
 	ExConsoleLoggerEx _ExConsoleAllCallback;
@@ -96,14 +97,12 @@ private:
 	void _Initialize();
 	void _Deinitialize();
 
-	void _PutAuthor();
-	string _GetCLICommandStr();
-	void _ParseCommand(string __Command);
-	void _SendToCommandLine(const char *Str, ...);
+  void _Initialze_Pointers();
+  void _Deinitialize_Pointers();
 
+	void _ParseCommand(MessageInformations &__Msg);
 	void _SetInfomation(Mat &__FrameData);
-
-  bool _IsEmptyCommandStrQueue();
+  template <typename T> bool _IsEmptyQueue(queue<T> __Queue, ThreadMutex &__Mutex);
 
 	static void _FireBaseAdapter_FeatureSearchedResult(
 #if !defined(MODE_ONLY_DETECTION)
@@ -112,35 +111,35 @@ private:
       FeatureSets
 #endif
 			__Data);
-	//static void _FireBaseAdapter_DatabaseSearchedResult(vector<FeatureData> __SortedData);
 	static void _FireBaseAdapter_AutoFocus(void);
   static void _FireBaseAdapter_LaneSearchedResult(LaneDetectData __Data);
+
+  // Message Callback by "FireBaseConnectPool"
+  static void _FireBaseAdapter_ExternalRecvMessageCallback(MessageInformations __Msg);
+  static void _FireBaseAdapter_ExternalVideoCallback(Mat __View);
 
 #if defined(LOG_WRITE_MODE)
 	static void _AllLogCallback(const char *__CallValueString, const char *__Messages);
 #endif
-
-	static void *_FireBaseAdapter_InputCLICommandThread(void *Param);
-#if defined(SET_COMMON_MODULE_ETHERNET)
-	static void *_FireBaseAdapter_InputEthernetCommandThread(void *Param);
-#endif
-#if defined(SET_DEVICE_SERIAL)
-  static void *_FireBaseAdapter_InputSerialCommandThread(void *Param);
-#endif
+  static void *_FireBaseAdapter_VideoPassingThroughProcessingThread(void *Param);
 	static void *_FireBaseAdapter_ParseCommandThread(void *Param);
-
-	static void *_FireBaseAdapter_VisionThread(void *Param);
+  static void *_FireBaseAdapter_SendCommandThread(void *Param);
 
 public:
 	FireBaseAdapter();
   ~FireBaseAdapter();
 
+  void Start_Video();
+  void Stop_Video();
+  void Start_Streaming();
+  void Stop_Streaming();
 	void Start_Engine();
 	void Stop_Engine();
 
+	void Start_GetCommand();
+	void Stop_GetCommand();
 
-	void Start_Adapter();
-	void Stop_Adapter();
+  IMPLEMENT_GET(bool, AdapterStarted, _AdapterStarted)
 };
 
 #endif
