@@ -69,6 +69,9 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
+
+// support poll.
+#include <sys/poll.h>
 #endif
 
 typedef struct _ClientsList {
@@ -86,8 +89,8 @@ typedef struct _ClientsList {
 
 	void ClientsListInitialize() {
 		ClientNumber = -1;
-		ClientType = new char[BUFFER_MAX_32];
-		ClientName = new char[BUFFER_MAX_32];
+		ClientType = new char[BUFFER_MAX_64];
+		ClientName = new char[BUFFER_MAX_64];
 	}
 
 	void ClientsListDeinitialize() {
@@ -95,7 +98,12 @@ typedef struct _ClientsList {
 		delete ClientType;
 		delete ClientName;
 	}
+
+  _ClientsList() { ClientsListInitialize(); }
+  //~_ClientsList() { ClientsListDeinitialize(); }
 } ClientsList;
+
+typedef struct pollfd TCPPollFd;
 
 class Telepathy {
 private:
@@ -103,6 +111,7 @@ private:
 public:
 	// Server Class
 	class Server {
+
 	private:
 		Thread _Thread;
 #if defined(WINDOWS_SYS)
@@ -112,6 +121,18 @@ public:
 #elif defined(POSIX_SYS)
     sockaddr_in _ServerAddress;
     int _ServerSocket;
+
+    TCPPollFd _Fds[POLL_MAX_CONNECTIONS];
+    int _ConnectionNumber;
+
+    int _AddClient();
+    bool _Receive(
+#if defined(WINDOWS_SYS)
+        SOCKET
+#elif defined(POSIX_SYS)
+        int
+#endif
+    ClientSocket);
 #endif
 
 	public:
@@ -119,7 +140,7 @@ public:
 		~Server();
 
 		//list<SOCKET> ConnectorsSocketList;
-		list<ClientsList> ClientList;
+		vector<ClientsList> ConnectedClientList;
 
 		bool IsInitializeServer;
 		bool IsServerStarted;
@@ -138,22 +159,22 @@ public:
 #elif defined(POSIX_SYS)
                                               int
 #endif
-                                               ClientSocket);
+                                              ClientSocket);
+    typedef void (* _T_ANYDISCONNECTIONNOTIFIER)(
+#if defined(WINDOWS_SYS)
+                                                 SOCKET
+#elif defined(POSIX_SYS)
+                                                 int
+#endif
+                                                 ClientSocket);
 		// Server Receive Callback Pointer.
 		_T_SERVERRECEIVEDCALLBACK TServerReceivedCallback;
-		_T_ANYCONNECTIONNOTIFIER TAnyConnentionNotifier;
+		_T_ANYCONNECTIONNOTIFIER TAnyConnectionNotifier;
+    _T_ANYDISCONNECTIONNOTIFIER TAnyDisconnectionNotifier;
 
-		bool ServerInitialize();
-		bool ServerStart();
-		void ServerClose();
-		void ServerListentoClient();
-		bool ServerReceiving(
-#if defined(WINDOWS_SYS)
-        SOCKET
-#elif defined(POSIX_SYS)
-        int
-#endif
-        ClientSocket);
+		bool Initialize_Server();
+		bool Start_Server();
+		void Close_Server();
 
 		bool SendDataToOne(char *Str,
 #if defined(WINDOWS_SYS)
@@ -166,8 +187,10 @@ public:
 
 		// using pthread
 		static void *Server_ConnectionThread(void *Param);
+    /*
 		// using pthread
 		static void *Server_ReceivingThread(void *Param);
+     */
 	};
 
 	// Client Class

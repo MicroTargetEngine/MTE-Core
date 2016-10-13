@@ -51,7 +51,7 @@ Telepathy::Server::Server() {
 // destructor
 Telepathy::Server::~Server() {
 	if (IsInitializeServer == true) {
-		ServerClose();
+    Close_Server();
 	}
 }
 #pragma endregion Constructor & Destructor
@@ -59,9 +59,60 @@ Telepathy::Server::~Server() {
 #pragma region Server Threads
 
 void * Telepathy::Server::Server_ConnectionThread(void *Param) {
-	while (1) 
-		G_TelepathyServer->ServerListentoClient();
+  Telepathy::Server *_TServer = (Telepathy::Server *) Param;
 
+	while (_TServer->IsServerStarted == true) {
+    bool _TCompressFds = false;
+    int _TFds = poll(_TServer->_Fds, _TServer->_ConnectionNumber, -1);
+
+    if (_TFds < 0) {
+      // error.
+    }
+
+    int _TCurrentSize = _TServer->_ConnectionNumber;
+    for (int i=0; i<_TCurrentSize; i++) {
+      if (_TServer->_Fds[i].revents == 0)
+        continue;
+
+      if (_TServer->_Fds[i].fd == _TServer->_ServerSocket) {
+        int _TSocket = G_TelepathyServer->_AddClient();
+        if (_TSocket == -1) {
+          // Socket Connect Fail.
+          continue;
+        }
+        else {
+          _TServer->_Fds[_TServer->_ConnectionNumber].fd = _TSocket;
+          _TServer->_Fds[_TServer->_ConnectionNumber].events = POLLIN;
+          _TServer->_ConnectionNumber++;
+        }
+      }
+      else {
+        if (G_TelepathyServer->_Receive(_TServer->_Fds[i].fd) == false) {
+          close(_TServer->_Fds[i].fd);
+          _TServer->_Fds[i].fd = -1;
+          _TCompressFds = true;
+        }
+      }
+    }
+
+    if (_TCompressFds == true) {
+      for (int i=0; i<_TServer->_ConnectionNumber; i++) {
+        if (_TServer->_Fds[i].fd == -1) {
+          for (int j=i; j<_TServer->_ConnectionNumber; j++)
+            _TServer->_Fds[j].fd = _TServer->_Fds[j+1].fd;
+          i--;
+          _TServer->_ConnectionNumber--;
+        }
+      }
+    }
+  }
+
+  // 서버 끝나면 전부 끊어버린다
+  for (int i=0; i<_TServer->_ConnectionNumber; i++){
+    if (_TServer->_Fds[i].fd >= 0) {
+      close(_TServer->_Fds[i].fd);
+    }
+  }
 #if defined(WINDOWS_SYS)
 	_endthread();
 #elif defined(POSIX_SYS)
@@ -70,6 +121,7 @@ void * Telepathy::Server::Server_ConnectionThread(void *Param) {
 	return 0;
 }
 
+/*
 void *Telepathy::Server::Server_ReceivingThread(void *Param) {
 #if defined(WINDOWS_SYS)
   SOCKET
@@ -86,7 +138,7 @@ void *Telepathy::Server::Server_ReceivingThread(void *Param) {
 
 	while (1) {
 		// 현재 Thread는 계속 받는다.
-		if (G_TelepathyServer->ServerReceiving(_CTlientSocket) == false)
+		if (G_TelepathyServer->_Receive(_CTlientSocket) == false)
 			break;
 	}
 #if defined(WINDOWS_SYS)
@@ -95,11 +147,11 @@ void *Telepathy::Server::Server_ReceivingThread(void *Param) {
 
 #endif
 	return 0;
-}
+}*/
 #pragma endregion Server Threads
 
 // Server 초기화.
-bool Telepathy::Server::ServerInitialize() {
+bool Telepathy::Server::Initialize_Server() {
 	// 이 부분은 통째로 Windows용
 	// 추후 다른 OS도 추가.
 
@@ -142,13 +194,13 @@ bool Telepathy::Server::ServerInitialize() {
 
 	// socket bind.
 	if (bind(_ServerSocket, (sockaddr *)&_ServerAddress, sizeof(_ServerAddress)) != 0) {
-		ServerClose();
+    Close_Server();
 		return false;
 	}
 
 	// socket listen.
 	if (listen(_ServerSocket, TCP_LISTEN_QUEUE) != 0) {
-		ServerClose();
+    Close_Server();
 		return false;
 	}
 
@@ -156,11 +208,16 @@ bool Telepathy::Server::ServerInitialize() {
 	G_TelepathyServer = this;
 	IsInitializeServer = true;
 
+  // poll init.
+  _Fds[0].fd = _ServerSocket;
+  _Fds[0].events = POLLIN;
+  _ConnectionNumber = 1;
+
 	return true;
 }
 
 // Server 기동.
-bool Telepathy::Server::ServerStart() {
+bool Telepathy::Server::Start_Server() {
 	bool _TIsStarted = false;
 	if (IsInitializeServer != true) {
 		// failed started server.
@@ -168,14 +225,14 @@ bool Telepathy::Server::ServerStart() {
 	}
 	else {
 		// Client 관리 Thread 시작.
-		_Thread.StartThread(Server_ConnectionThread, NULL);
+		_Thread.StartThread(Server_ConnectionThread, this);
 		_TIsStarted = IsServerStarted = true;
 	}
 	return _TIsStarted;
 }
 
 // Server 종료.
-void Telepathy::Server::ServerClose() {
+void Telepathy::Server::Close_Server() {
 	if (_ServerSocket != NULL) {
 #if defined(WINDOWS_SYS)
     closesocket(_ServerSocket);
@@ -190,7 +247,7 @@ void Telepathy::Server::ServerClose() {
 
 // Client가 Server 접속시 Socket List에 붙여 Listen하게 하는 과정.
 // User의 접속을 위하여 필요한 과정.
-void Telepathy::Server::ServerListentoClient() {
+int Telepathy::Server::_AddClient() {
 	// Client 접속시, 접속 연결 기능.
 #if defined(WINDOWS_SYS)
 	SOCKET
@@ -227,7 +284,7 @@ void Telepathy::Server::ServerListentoClient() {
       ) {
 		ClientsList _TClientList;
 		// Clientlist Initialize.
-		_TClientList.ClientsListInitialize();
+		//_TClientList.ClientsListInitialize();
 		// Client Address.
 		_TClientList.ClientAddress = _TClientAddress;
 		// Socket.
@@ -237,25 +294,26 @@ void Telepathy::Server::ServerListentoClient() {
 		// Client Name.
 		_TClientList.ClientName = "";
 		// push at lists back.
-		ClientList.push_back(_TClientList);
+		ConnectedClientList.push_back(_TClientList);
 		//ConnectorsSocketList.push_back(_TSocket);
-		TAnyConnentionNotifier(_TSocket);
+		TAnyConnectionNotifier(_TSocket);
 	}
 	else
-		return ;
+		return -1;
 
 	// Thread Begin.
-	_Thread.StartThread(Server_ReceivingThread, (void *)_TSocket);
+	//_Thread.StartThread(Server_ReceivingThread, (void *)_TSocket);
+  return _TSocket;
 }
 
 // Server가 Client들에게 정보를 받는 과정.
-bool Telepathy::Server::ServerReceiving(
+bool Telepathy::Server::_Receive(
 #if defined(WINDOWS_SYS)
     SOCKET
 #elif defined(POSIX_SYS)
     int
 #endif
-    ClientSocket) {
+ClientSocket) {
 	char _TBuffer[BUFFER_MAX_32767];
 #if defined(WINDOWS_SYS)
 	int
@@ -273,27 +331,29 @@ bool Telepathy::Server::ServerReceiving(
     recv(ClientSocket, _TBuffer, BUFFER_MAX_32767, 0);
 #endif
 	
-	if (_TReadBufferLength == -1) {
+	if (_TReadBufferLength <= 0) {
 		// ClientsList로 인하여 구현이 바뀜.
 		// User Spacific하게 바꿀 수 있음.
-		
-		for_IterToEnd(list, ClientsList, ClientList, i) {
+
+    for_IterToEnd(vector, ClientsList, ConnectedClientList, i) {
 			if (_i->ClientSocket == ClientSocket) {
 				// Iterator를 하나 더 만들어준다.
-				list<ClientsList>::iterator _TClientListIter = _i;
+				vector<ClientsList>::iterator _TClientListIter = _i;
 				// Iterator가 위치를 잃어버려도 어차피 return하기 때문에 상관 없음.
 				// 다른 Iterator를 만들어 이것을 하나 증가시켜 현재 Iterator의 위치가 end인지 검사한다.
 				// 아니라면 삭제.
-				if ((++_TClientListIter) != ClientList.end())
-					_i = ClientList.erase(_i);
+				if ((++_TClientListIter) != ConnectedClientList.end())
+					_i = ConnectedClientList.erase(_i);
 				else {
-					// List에서 pop_back.
-					ClientList.pop_back();
-					// break를 넣어주지 않으면 죽어버린다.
-					break;
-				}
+          // List에서 pop_back.
+          ConnectedClientList.pop_back();
+          // break를 넣어주지 않으면 죽어버린다.
+          break;
+        }
 			}
 		}
+
+    TAnyDisconnectionNotifier(ClientSocket);
 		return false;
 	}
 	else {
@@ -314,26 +374,33 @@ bool Telepathy::Server::SendDataToOne(char *Str,
 	// LIt is List Iterator.
 	//list<SOCKET>::iterator _TLIt;
 	int _TSendStatus = 0;
+  int _TIndex = 0;
 
 	// 지정된 Client에게 보냄.
 	// STL List의 특성상, remove할 때 문제가 있으며, erase를 할 때도 Iterator에서 다음을 인식 할 수 없는 것에 매우 주의 하였다.
 	// 그러므로 List의 끝에 있는 접속자를(begin에서 end로 iterator가 돌 경우) 삭제 할 때,
 	// Error가 날 수 있다는 것을 전제하여 다음과 같이 Code를 만들었다.
-	for_IterToEnd(list, ClientsList, ClientList, i) {
+	for_IterToEnd(vector, ClientsList, ConnectedClientList, i) {
 		// 일단 보낼 쪽의 Socket을 검사한다.
 		if (_i->ClientSocket == ClientSocket) {
 			_TSendStatus = send(_i->ClientSocket, Str, strlen(Str) + 1, 0);
 			if (_TSendStatus == -1) {
+        TAnyDisconnectionNotifier(ClientSocket);
+
+        // 먼저 Poll Desc 삭제.
+        close(_Fds[_TIndex+1].fd);
+        _Fds[_TIndex+1].fd = -1;
+
 				// Iterator를 하나 더 만들어준다.
-				list<ClientsList>::iterator _TClientListIter = _i;
+				vector<ClientsList>::iterator _TClientListIter = _i;
 				// Iterator가 위치를 잃어버려도 어차피 return하기 때문에 상관 없음.
 				// 다른 Iterator를 만들어 이것을 하나 증가시켜 현재 Iterator의 위치가 end인지 검사한다.
 				// 아니라면 삭제.
-				if ((++_TClientListIter) != ClientList.end())
-					_i = ClientList.erase(_i);
+				if ((++_TClientListIter) != ConnectedClientList.end())
+					_i = ConnectedClientList.erase(_i);
 				else {
 					// List에서 pop_back.
-					ClientList.pop_back();
+					ConnectedClientList.pop_back();
 					// break를 넣어주지 않으면 죽어버린다.
 					break;
 				}
@@ -341,6 +408,7 @@ bool Telepathy::Server::SendDataToOne(char *Str,
 			}
 			return true;
 		}
+    _TIndex++;
 	}
 	return true;
 }
@@ -351,24 +419,32 @@ void Telepathy::Server::SendDataToAll(char *Str) {
 	// 어떤 Client로의 Message 전송이 실패 할 수도 있다.
 	// 즉, 전부 다 성공한다는 보장이 없다.
 	int _TSendStatus = 0;
+  int _TIndex = 0;
 
-	for_IterToEnd(list, ClientsList, ClientList, i) {
+	for_IterToEnd(vector, ClientsList, ConnectedClientList, i) {
 		_TSendStatus = send(_i->ClientSocket, Str, strlen(Str) + 1, 0);
 		if (_TSendStatus == -1) {
+      TAnyDisconnectionNotifier(_Fds[_TIndex+1].fd);
+
+      // 먼저 Poll Desc 삭제.
+      close(_Fds[_TIndex+1].fd);
+      _Fds[_TIndex+1].fd = -1;
+
 			// Iterator를 하나 더 만들어준다.
-			list<ClientsList>::iterator _TClientListIter = _i;
+			vector<ClientsList>::iterator _TClientListIter = _i;
 			// Iterator가 위치를 잃어버려도 어차피 return하기 때문에 상관 없음.
 			// 다른 Iterator를 만들어 이것을 하나 증가시켜 현재 Iterator의 위치가 end인지 검사한다.
 			// 아니라면 삭제.
-			if ((++_TClientListIter) != ClientList.end())
-				_i = ClientList.erase(_i);
+			if ((++_TClientListIter) != ConnectedClientList.end())
+				_i = ConnectedClientList.erase(_i);
 			else {
 				// List에서 pop_back.
-				ClientList.pop_back();
+				ConnectedClientList.pop_back();
 				// break를 넣어주지 않으면 죽어버린다.
 				break;
 			}
 		}
+    _TIndex++;
 	}
 }
 #pragma endregion Server Class
