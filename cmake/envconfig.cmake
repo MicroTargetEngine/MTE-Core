@@ -184,7 +184,7 @@ function(set_toolchain_env)
   endif()
 
   message(STATUS "** Loading Project \"CMAKE_CXX_FLAGS\"")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wpragmas -Winvalid-noreturn") # -std=c++11
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wpragmas -Winvalid-noreturn") # -std=c++11
 
   set(_va_cmake_dir ${_va_cmake_dir} PARENT_SCOPE)
   set(_va_devenv_dir ${_va_devenv_dir} PARENT_SCOPE)
