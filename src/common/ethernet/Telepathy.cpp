@@ -336,7 +336,7 @@ ClientSocket) {
 #endif
       _TReadBufferLength;
 
-	memset(_TBuffer, NULL, sizeof(_TBuffer));
+	memset(_TBuffer, 0, sizeof(_TBuffer));
 
 	_TReadBufferLength =
 #if defined(WINDOWS_SYS)
@@ -582,7 +582,7 @@ bool Telepathy::Client::ClientReceiving() {
 #endif
       _TReadBufferLength;
 
-	memset(_TBuffer, NULL, sizeof(_TBuffer));
+	memset(_TBuffer, 0, sizeof(_TBuffer));
 
 	_TReadBufferLength =
 #if defined(WINDOWS_SYS)

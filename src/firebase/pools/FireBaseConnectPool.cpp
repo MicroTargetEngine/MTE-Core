@@ -380,15 +380,15 @@ void *FireBaseConnectPool::_FireBaseConnectPool_InputCLICommandThread(void *Para
 #endif
   // 이 쓰레드는 명령을 받으면 무조건 큐에 집어 넣는다.
   // CLI는 대기하다가 리턴하는 방식이기 때문에 콜백으로 하는것이 아니라 별도의 Thread가 존재하여야 한다.
-  FireBaseConnectPool *_TAdapter = (FireBaseConnectPool *) Param;
+  FireBaseConnectPool *_TConnectPool = (FireBaseConnectPool *) Param;
 
-  while (_TAdapter->_ConnectPoolStarted == true) {
-    string _TCommandStr = _TAdapter->_GetCLICommandStr();
+  while (_TConnectPool->_ConnectPoolStarted == true) {
+    string _TCommandStr = _TConnectPool->_GetCLICommandStr();
 
     ConnectInformation _TConnectInformation;
     _TConnectInformation.Types = 0;
 
-    if (_TAdapter->_FindConnection(_TConnectInformation) == true) {
+    if (_TConnectPool->_FindConnection(_TConnectInformation) == true) {
       // CLI도 마찬가지로 Connection을 찾는다.
       // 좀 복잡스럽지만, 이렇게 해야 구조가 완전히 통일 된다.
       MessageInformations _TMessageInformations;
@@ -398,9 +398,12 @@ void *FireBaseConnectPool::_FireBaseConnectPool_InputCLICommandThread(void *Para
       _TMessageInformations.UserInformation = _TConnectInformation;
       _TMessageInformations.RecvMessage = _TCommandStr;
 
-      _TAdapter->_RecvMsgQueue.push(_TMessageInformations);
+      _TConnectPool->_RecvMsgQueue.push(_TMessageInformations);
 
-      _TAdapter->_SyncSignal_RecvMsgQueue.Signal();
+      _TConnectPool->_SyncSignal_RecvMsgQueue.Signal();
+#if defined(LOG_WRITE_MODE)
+      G_LogD->Logging("Var", "into _SyncSignal_RecvMsgQueue Activate");
+#endif
     }
   }
 
@@ -414,17 +417,17 @@ void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(voi
 #if defined(LOG_WRITE_MODE)
   G_LogD->Logging("Func", "into _FireBaseConnectPool_RecvMsgQueueProcessingThread Function");
 #endif
-  FireBaseConnectPool *_TAdapter = (FireBaseConnectPool *) Param;
+  FireBaseConnectPool *_TConnectPool = (FireBaseConnectPool *) Param;
 
-  while (_TAdapter->_ConnectPoolStarted == true) {
-    if (_TAdapter->_IsEmptyQueue(_TAdapter->_RecvMsgQueue, _TAdapter->_Mutex_RecvMsgQueue) != true) {
-      MessageInformations _TMsgInfo = _TAdapter->_RecvMsgQueue.front();
+  while (_TConnectPool->_ConnectPoolStarted == true) {
+    if (_TConnectPool->_IsEmptyQueue(_TConnectPool->_RecvMsgQueue, _TConnectPool->_Mutex_RecvMsgQueue) != true) {
+      MessageInformations _TMsgInfo = _TConnectPool->_RecvMsgQueue.front();
 
-      _TAdapter->TRecvMessageCallback(_TMsgInfo);
-      _TAdapter->_RecvMsgQueue.pop();
+      _TConnectPool->TRecvMessageCallback(_TMsgInfo);
+      _TConnectPool->_RecvMsgQueue.pop();
     }
     else
-      _TAdapter->_SyncSignal_RecvMsgQueue.Wait();
+      _TConnectPool->_SyncSignal_RecvMsgQueue.Wait();
 
   }
   return 0;
