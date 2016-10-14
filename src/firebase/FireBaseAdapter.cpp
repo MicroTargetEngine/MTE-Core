@@ -68,20 +68,20 @@ void FireBaseAdapter::_Initialize_Members() {
 void FireBaseAdapter::_Initialize() {
   G_Adapter = this;
 
-	// console creates
+  // console creates
 #if defined(WINDOWS_SYS)
-	//_ExConsoleAllCallback.Create("All Logs");
-	//_ExConsoleAllCallback.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_BLUE);
+  //_ExConsoleAllCallback.Create("All Logs");
+  //_ExConsoleAllCallback.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_BLUE);
 
-	//_ExConsoleFuncCallback.Create("Func Logs");
-	//_ExConsoleFuncCallback.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_BLACK);
-	//_ExConsoleTimeCallback.Create("Processing Time Logs");
-	//_ExConsoleTimeCallback.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_BLACK);
-	_ExConsoleDataCallback.Create("See Data Logs");
-	_ExConsoleDataCallback.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_BLACK);
+  //_ExConsoleFuncCallback.Create("Func Logs");
+  //_ExConsoleFuncCallback.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_BLACK);
+  //_ExConsoleTimeCallback.Create("Processing Time Logs");
+  //_ExConsoleTimeCallback.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_BLACK);
+  _ExConsoleDataCallback.Create("See Data Logs");
+  _ExConsoleDataCallback.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_BLACK);
 
-	_ExConsoleData.Create("Data Sorted Logs");
-	_ExConsoleData.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_GREEN);
+  _ExConsoleData.Create("Data Sorted Logs");
+  _ExConsoleData.cls(ExConsoleLoggerEx::COLOR_BACKGROUND_GREEN);
 #endif
   _Initialze_Pointers();
 }
@@ -103,42 +103,45 @@ void FireBaseAdapter::_Deinitialize_Pointers() {
 }
 
 void FireBaseAdapter::_ParseCommand(MessageInformations &__Msg) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
   string _TID = __Msg.UserInformation.UserID;
   string _TSendingCommand = "";
 
-	StringTokenizer *_TStringTokenizer = new StringTokenizer();
+  StringTokenizer *_TStringTokenizer = new StringTokenizer();
 
-	_TStringTokenizer->Set_InputCharString(__Msg.RecvMessage.c_str());
-	_TStringTokenizer->Set_SingleToken(" ");
+  _TStringTokenizer->Set_InputCharString(__Msg.RecvMessage.c_str());
+  _TStringTokenizer->Set_SingleToken(" ");
 
-	if (_TStringTokenizer->Go_StringToken() == false) {
-		delete _TStringTokenizer;
-		return ;
-	}
+  if (_TStringTokenizer->Go_StringToken() == false) {
+    delete _TStringTokenizer;
+    return;
+  }
 
-	for_IterToEndC(list, string, _TStringTokenizer->Get_TokenedStringList(), i) {
-		StringTokenizer *_TAtomicValues = new StringTokenizer();
-		if (strcmp(_i->c_str(), "Engine_Start") == 0) {
-			Start_Engine();
-		}
-		else if (strcmp(_i->c_str(), "Engine_Stop") == 0) {
-			Stop_Engine();
-		}
-		else if (strcmp(_i->c_str(), "Pause_Engine") == 0) {
+  for_IterToEndC(list, string, _TStringTokenizer->Get_TokenedStringList(), i) {
+    StringTokenizer *_TAtomicValues = new StringTokenizer();
+    if (strcmp(_i->c_str(), "Engine_Start") == 0) {
+      Start_Engine();
+    }
+    else if (strcmp(_i->c_str(), "Engine_Stop") == 0) {
+      Stop_Engine();
+    }
+    else if (strcmp(_i->c_str(), "Pause_Engine") == 0) {
       _FireBaseEngine->Pause_FireBaseEngine();
-		}
-		else if (strcmp(_i->c_str(), "Resume_Engine") == 0) {
+    }
+    else if (strcmp(_i->c_str(), "Resume_Engine") == 0) {
       _FireBaseEngine->Resume_FireBaseEngine();
-		}
-		else if (strcmp(_i->c_str(), "Quit") == 0) {
+    }
+    else if (strcmp(_i->c_str(), "Quit") == 0) {
       Stop_GetCommand();
-		}
-		else if (strcmp(_i->c_str(), "Set_Fall") == 0) {
+    }
+    else if (strcmp(_i->c_str(), "Set_Fall") == 0) {
       _FireBaseEngine->Pause_FireBaseEngine();
-		}
-		else if (strcmp(_i->c_str(), "Set_Raise") == 0) {
+    }
+    else if (strcmp(_i->c_str(), "Set_Raise") == 0) {
       _FireBaseEngine->Resume_FireBaseEngine();
-		}
+    }
     else if (strcmp(_i->c_str(), "Do_Control") == 0) {
       _ControlEnable = true;
       _TSendingCommand.append("Control_Started");
@@ -147,43 +150,45 @@ void FireBaseAdapter::_ParseCommand(MessageInformations &__Msg) {
       _ControlEnable = false;
       _TSendingCommand.append("Control_Stopped");
     }
-    else if (strcmp(_i->c_str(), "Initial_Connect") == 0){
+    else if (strcmp(_i->c_str(), "Initial_Connect") == 0) {
       // 접속자를 찾고, 접속자 안에서 동일한 ID가 존재하면 보낸다.
       // 단, Socket은 이더넷에 한해서 처리한다.
-      // Your_ID가 여기에 들어간다.
+      // Your_ID가 여기에 들어간다.Y
       _TSendingCommand.append("Your_ID=");
       _TSendingCommand.append(_TID);
     }
     else {
-      _TAtomicValues->Set_InputCharString((const char *)_i->c_str());
+      _TAtomicValues->Set_InputCharString((const char *) _i->c_str());
       _TAtomicValues->Set_SingleToken("=");
 
       if (_TAtomicValues->Go_StringToken() != true) {
         // Database String이 잘못 되었을 때.
         delete _TAtomicValues; // 중간에 나가기 때문에 반드시 delete 해준다.
-        return ;
+        return;
       }
 
-      StringListIter<char *> *_TIterationSeeker = new StringListIter<char *>(_TAtomicValues->Get_TokenedCharListArrays());
+      StringListIter<char *> *_TIterationSeeker = new StringListIter<char *>(
+          _TAtomicValues->Get_TokenedCharListArrays());
 
-      if (strcmp((const char *)*_TIterationSeeker->Get_NowStringIter(), "Set_CamResolution") == 0) {
+      if (strcmp((const char *) *_TIterationSeeker->Get_NowStringIter(), "Set_CamResolution") == 0) {
         StringTokenizer *_TCamResValues = new StringTokenizer();
 
         _TIterationSeeker->Move_NextStringIter();
 
-        _TCamResValues->Set_InputCharString((const char *)*_TIterationSeeker->Get_NowStringIter());
+        _TCamResValues->Set_InputCharString((const char *) *_TIterationSeeker->Get_NowStringIter());
         _TCamResValues->Set_SingleToken(",");
 
         if (_TCamResValues->Go_StringToken() == false) {
           delete _TCamResValues;
-          return ;
+          return;
         }
 
-        StringListIter<char *> *_TCamResValueSeeker = new StringListIter<char *>(_TCamResValues->Get_TokenedCharListArrays());
+        StringListIter<char *> *_TCamResValueSeeker = new StringListIter<char *>(
+            _TCamResValues->Get_TokenedCharListArrays());
 
-        _CamWidth = atoi((const char *)*_TCamResValueSeeker->Get_NowStringIter());
+        _CamWidth = atoi((const char *) *_TCamResValueSeeker->Get_NowStringIter());
         _TCamResValueSeeker->Move_NextStringIter();
-        _CamHeight = atoi((const char *)*_TCamResValueSeeker->Get_NowStringIter());
+        _CamHeight = atoi((const char *) *_TCamResValueSeeker->Get_NowStringIter());
 
         delete _TCamResValueSeeker;
         delete _TCamResValues;
@@ -208,9 +213,9 @@ void FireBaseAdapter::_ParseCommand(MessageInformations &__Msg) {
         // 다시 시작.
         _FireBaseEngine->Resume_FireBaseEngine();
       }
-      else if(strcmp((const char *)*_TIterationSeeker->Get_NowStringIter(), "Set_CamNum") == 0) {
+      else if (strcmp((const char *) *_TIterationSeeker->Get_NowStringIter(), "Set_CamNum") == 0) {
         _TIterationSeeker->Move_NextStringIter();
-        _CamPort = atoi((const char *)*_TIterationSeeker->Get_NowStringIter());
+        _CamPort = atoi((const char *) *_TIterationSeeker->Get_NowStringIter());
 
         // 엔진 일시 정지 및 Cam 잠시 정지.
         _FireBaseEngine->Pause_FireBaseEngine();
@@ -229,21 +234,21 @@ void FireBaseAdapter::_ParseCommand(MessageInformations &__Msg) {
       }
     }
 
-		delete _TAtomicValues;
-	}
-	delete _TStringTokenizer;
+    delete _TAtomicValues;
+  }
+  delete _TStringTokenizer;
 }
 
 void FireBaseAdapter::_SetInfomation(Mat &__FrameData) {
-	// Image에 정보를 그린다.
-	// 추후에 Data가 다 나오고 나서.
-	__MUTEXLOCK(_Mutex_ViewPoint);
-	for (int i = 0; i < _ViewPoint.size(); i++)
-		cv::circle(__FrameData, Point(_ViewPoint.at(i).first, _ViewPoint.at(i).second), 10, Scalar(0,0,255), CV_FILLED);
-	__MUTEXUNLOCK(_Mutex_ViewPoint);
+  // Image에 정보를 그린다.
+  // 추후에 Data가 다 나오고 나서.
+  __MUTEXLOCK(_Mutex_ViewPoint);
+  for (int i = 0; i < _ViewPoint.size(); i++)
+    cv::circle(__FrameData, Point(_ViewPoint.at(i).first, _ViewPoint.at(i).second), 10, Scalar(0, 0, 255), CV_FILLED);
+  __MUTEXUNLOCK(_Mutex_ViewPoint);
 }
 
-template <typename T>
+template<typename T>
 bool FireBaseAdapter::_IsEmptyQueue(queue<T> __Queue, ThreadMutex &__Mutex) {
   bool _TResult = false;
 
@@ -261,28 +266,28 @@ void FireBaseAdapter::_FireBaseAdapter_FeatureSearchedResult(
 #else
     FeatureSets
 #endif
-    __Data) {
-	__MUTEXLOCK(G_Adapter->_Mutex_ViewPoint);
-	G_Adapter->_ViewPoint.clear();
-	__MUTEXUNLOCK(G_Adapter->_Mutex_ViewPoint);
+__Data) {
+  __MUTEXLOCK(G_Adapter->_Mutex_ViewPoint);
+  G_Adapter->_ViewPoint.clear();
+  __MUTEXUNLOCK(G_Adapter->_Mutex_ViewPoint);
 #if !defined(MODE_ONLY_DETECTION)
-	for_IterToEnd(vector, FeatureData, __Data, i) {
-  #if defined(WINDOWS_SYS)
-		G_Adapter->_ExConsoleData.cprintf("ImageSearching -> Name : %s, X : %d, Y : %d, Category : %s, Tel : %s\n",
-			_i->comp_name_en.c_str(), _i->_DisplayPoint_X, _i->_DisplayPoint_Y, _i->comp_category.c_str(), _i->comp_tel.c_str());
-		pair<int, int> _TPoint;
-		_TPoint.first = _i->_DisplayPoint_X;
-		_TPoint.second = _i->_DisplayPoint_Y;
-		//__MUTEXLOCK(G_Adapter->_ViewPointMutex);
-		G_Adapter->_ViewPoint.push_back(_TPoint);
-		//__MUTEXUNLOCK(G_Adapter->_ViewPointMutex);
-  #endif
-	}
+  for_IterToEnd(vector, FeatureData, __Data, i) {
+#if defined(WINDOWS_SYS)
+    G_Adapter->_ExConsoleData.cprintf("ImageSearching -> Name : %s, X : %d, Y : %d, Category : %s, Tel : %s\n",
+      _i->comp_name_en.c_str(), _i->_DisplayPoint_X, _i->_DisplayPoint_Y, _i->comp_category.c_str(), _i->comp_tel.c_str());
+    pair<int, int> _TPoint;
+    _TPoint.first = _i->_DisplayPoint_X;
+    _TPoint.second = _i->_DisplayPoint_Y;
+    //__MUTEXLOCK(G_Adapter->_ViewPointMutex);
+    G_Adapter->_ViewPoint.push_back(_TPoint);
+    //__MUTEXUNLOCK(G_Adapter->_ViewPointMutex);
+#endif
+  }
 #endif
 }
 
 void FireBaseAdapter::_FireBaseAdapter_AutoFocus(void) {
-	
+
 }
 
 void FireBaseAdapter::_FireBaseAdapter_LaneSearchedResult(LaneDetectData __Data) {
@@ -296,6 +301,9 @@ void FireBaseAdapter::_FireBaseAdapter_LaneSearchedResult(LaneDetectData __Data)
 /* Start External Callback */
 // Message
 void FireBaseAdapter::_FireBaseAdapter_ExternalRecvMessageCallback(MessageInformations __Msg) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
   // 큐에 집어 넣고 메세지가 왔다는 시그널을 준다.
   G_Adapter->_RecvCommandQueue.push(__Msg);
   G_Adapter->_SyncSignal_RecvCommandQueue.Signal();
@@ -310,10 +318,14 @@ void FireBaseAdapter::_FireBaseAdapter_ExternalVideoCallback(Mat __View) {
   G_Adapter->_ProcessingVideoQueue.push(__View);
   G_Adapter->_SyncSignal_ProcessingVideoQueue.Signal();
 }
+
 /* End External Callback */
 
 void *FireBaseAdapter::_FireBaseAdapter_VideoPassingThroughProcessingThread(void *Param) {
-  FireBaseAdapter *_TAdapter = (FireBaseAdapter *)Param;
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
+  FireBaseAdapter *_TAdapter = (FireBaseAdapter *) Param;
 
   while (_TAdapter->_EngineStarted == true) {
     if (_TAdapter->_IsEmptyQueue(_TAdapter->_ProcessingVideoQueue, _TAdapter->_Mutex_ProcessingVideoQueue) != true) {
@@ -332,8 +344,11 @@ void *FireBaseAdapter::_FireBaseAdapter_VideoPassingThroughProcessingThread(void
   return 0;
 }
 
-void *FireBaseAdapter::_FireBaseAdapter_ParseCommandThread(void *Param){
-  FireBaseAdapter *_TAdapter = (FireBaseAdapter *)Param;
+void *FireBaseAdapter::_FireBaseAdapter_ParseCommandThread(void *Param) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
+  FireBaseAdapter *_TAdapter = (FireBaseAdapter *) Param;
 
   // 모든 커넥션을 생성하고, 이것들을 깨운다.
   // 여기를 없에면, FireBase의 모든 Processing이 종료 된다.
@@ -372,7 +387,10 @@ void *FireBaseAdapter::_FireBaseAdapter_ParseCommandThread(void *Param){
 }
 
 void *FireBaseAdapter::_FireBaseAdapter_SendCommandThread(void *Param) {
-  FireBaseAdapter *_TAdapter = (FireBaseAdapter *)Param;
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
+  FireBaseAdapter *_TAdapter = (FireBaseAdapter *) Param;
 
   // 커넥션 큐에서 들어온 것들을 처리한다.
   while (_TAdapter->_AdapterStarted == true) {
@@ -392,6 +410,9 @@ void *FireBaseAdapter::_FireBaseAdapter_SendCommandThread(void *Param) {
 
 void FireBaseAdapter::Start_Video() {
   if (_FireBaseVideoPool.Get_VideoPoolStarted() != true) {
+#if defined(LOG_WRITE_MODE)
+    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
     // for External Video Callback.
     _FireBaseVideoPool.TExternalVideoCallback = _FireBaseAdapter_ExternalVideoCallback;
     // Activate Video.
@@ -401,23 +422,32 @@ void FireBaseAdapter::Start_Video() {
 
 void FireBaseAdapter::Stop_Video() {
   if (_FireBaseVideoPool.Get_VideoPoolStarted() == true) {
+#if defined(LOG_WRITE_MODE)
+    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
     _FireBaseVideoPool.TExternalVideoCallback = NULL;
     _FireBaseVideoPool.Stop_VideoPool();
     // Camera Safe Deactivate.
-    while (_FireBaseVideoPool.Get_VideoPoolStarted() == true) m_sleep(33);
+    while (_FireBaseVideoPool.Get_VideoPoolStarted() == true) m_sleep (33);
   }
 }
 
 void FireBaseAdapter::Start_Streaming() {
   if (_ExternalStreamViewer.Get_ExternalStreamViewerStarted() != true) {
+#if defined(LOG_WRITE_MODE)
+    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
     _ExternalStreamViewer.Start_ExternalStreamViewer();
   }
 }
 
 void FireBaseAdapter::Stop_Streaming() {
   if (_ExternalStreamViewer.Get_ExternalStreamViewerStarted() == true) {
+#if defined(LOG_WRITE_MODE)
+    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
     _ExternalStreamViewer.Stop_ExternalStreamViewer();
-    while (_ExternalStreamViewer.Get_ExternalStreamViewerStarted() == true) m_sleep(33);
+    while (_ExternalStreamViewer.Get_ExternalStreamViewerStarted() == true) m_sleep (33);
   }
 }
 
@@ -447,6 +477,9 @@ void FireBaseAdapter::Start_Engine() {
 void FireBaseAdapter::Stop_Engine() {
   if (_AdapterStarted == true
       && _EngineStarted == true) {
+#if defined(LOG_WRITE_MODE)
+    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
     //_FireBaseEngine->Stop_FireBaseEngine();
 
     Stop_Streaming();
@@ -458,6 +491,9 @@ void FireBaseAdapter::Stop_Engine() {
 
 void FireBaseAdapter::Start_GetCommand() {
   if (_AdapterStarted != true) {
+#if defined(LOG_WRITE_MODE)
+    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
     _AdapterStarted = true;
 
     // Activate Command Parser Threads.
@@ -470,6 +506,9 @@ void FireBaseAdapter::Start_GetCommand() {
 
 void FireBaseAdapter::Stop_GetCommand() {
   if (_AdapterStarted == true) {
+#if defined(LOG_WRITE_MODE)
+    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
     _AdapterStarted = false;
   }
 }
@@ -477,22 +516,22 @@ void FireBaseAdapter::Stop_GetCommand() {
 #if defined(LOG_WRITE_MODE)
 void FireBaseAdapter::_AllLogCallback(const char *__CallValueString, const char *__Messages) {
 #if defined(WINDOWS_SYS)
-	//G_Adapter->_ExConsoleAllCallback.cprintf("%s -> %s", __CallValueString, __Messages);
-	
-	if (strcmp(__CallValueString, "Func") == 0) {
-		//G_Adapter->_ExConsoleFuncCallback.cprintf(ExConsoleLoggerEx::COLOR_WHITE, "%s", __Messages);
-	}
-	else if (strcmp(__CallValueString, "Time") == 0) {
-		//G_Adapter->_ExConsoleTimeCallback.cprintf(ExConsoleLoggerEx::COLOR_WHITE, "%s", __Messages);
-	}
-	else if (strcmp(__CallValueString, "Data") == 0) {
-		G_Adapter->_ExConsoleDataCallback.cprintf(ExConsoleLoggerEx::COLOR_WHITE, "%s", __Messages);
-	}
-	else if (strcmp(__CallValueString, "State") == 0) {
-		//G_Adapter->_ExConsoleDataCallback.cprintf(ExConsoleLoggerEx::COLOR_WHITE, "%s", __Messages);
-	}
+  //G_Adapter->_ExConsoleAllCallback.cprintf("%s -> %s", __CallValueString, __Messages);
+
+  if (strcmp(__CallValueString, "Func") == 0) {
+    //G_Adapter->_ExConsoleFuncCallback.cprintf(ExConsoleLoggerEx::COLOR_WHITE, "%s", __Messages);
+  }
+  else if (strcmp(__CallValueString, "Time") == 0) {
+    //G_Adapter->_ExConsoleTimeCallback.cprintf(ExConsoleLoggerEx::COLOR_WHITE, "%s", __Messages);
+  }
+  else if (strcmp(__CallValueString, "Data") == 0) {
+    G_Adapter->_ExConsoleDataCallback.cprintf(ExConsoleLoggerEx::COLOR_WHITE, "%s", __Messages);
+  }
+  else if (strcmp(__CallValueString, "State") == 0) {
+    //G_Adapter->_ExConsoleDataCallback.cprintf(ExConsoleLoggerEx::COLOR_WHITE, "%s", __Messages);
+  }
 #else
-	printf("%s -> %s", __CallValueString, __Messages);
+  printf("%s -> %s", __CallValueString, __Messages);
 #endif
 }
 #endif // LOG_WRITE_MODE

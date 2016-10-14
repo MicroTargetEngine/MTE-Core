@@ -41,6 +41,10 @@
 #include "StringTokenizer.hpp"
 #include "StringListIter.hpp"
 
+#if defined(LOG_WRITE_MODE)
+#include "LogD.hpp"
+#endif
+
 FireBaseConnectPool *G_ConnectPool;
 
 FireBaseConnectPool::FireBaseConnectPool() {
@@ -55,6 +59,9 @@ FireBaseConnectPool::~FireBaseConnectPool() {
 }
 
 bool FireBaseConnectPool::_Initialize() {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _Initialize Function");
+#endif
   // CLI initialize.
   _Initialize_CLI();
 
@@ -128,6 +135,9 @@ void FireBaseConnectPool::_PutAuthor() {
 }
 
 bool FireBaseConnectPool::_FindConnection(ConnectInformation &__Connection) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FindConnection Function");
+#endif
   for_IterToEnd(vector, ConnectInformation, G_ConnectPool->_Connections, i) {
     if ((_i->Types == __Connection.Types)) {
       ConnectInformation _TConnectInformation;
@@ -156,6 +166,9 @@ bool FireBaseConnectPool::_FindConnection(ConnectInformation &__Connection) {
 }
 
 string FireBaseConnectPool::_SplitIDAndCommand(string &__Msg) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _SplitIDAndCommand Function");
+#endif
   string _TMsgString = "", _TID = "";
 
   StringTokenizer *_TStringTokenizer = new StringTokenizer();
@@ -201,6 +214,9 @@ string FireBaseConnectPool::_SplitIDAndCommand(string &__Msg) {
 }
 
 string FireBaseConnectPool::_GetCLICommandStr() {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _GetCLICommandStr Function");
+#endif
   char *_TCommand = (char *)calloc(BUFFER_MAX_32767, sizeof(char));
   string _TCommandString = "";
   memset(_TCommand, 0, sizeof(_TCommand));
@@ -224,6 +240,9 @@ string FireBaseConnectPool::_GetCLICommandStr() {
 }
 
 void FireBaseConnectPool::_SendToCommandLine(const char *Str, ...) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _SendToCommandLine Function");
+#endif
   va_list _TArgument_List;
   char _Str[BUFFER_MAX_4096];
 
@@ -236,6 +255,9 @@ void FireBaseConnectPool::_SendToCommandLine(const char *Str, ...) {
 
 template <typename T>
 bool FireBaseConnectPool::_IsEmptyQueue(queue<T> __Queue, ThreadMutex &__Mutex) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _IsEmptyQueue Function");
+#endif
   bool _TResult = false;
 
   __MUTEXLOCK(__Mutex);
@@ -247,6 +269,9 @@ bool FireBaseConnectPool::_IsEmptyQueue(queue<T> __Queue, ThreadMutex &__Mutex) 
 
 /* Start Communication Callbacks */
 void FireBaseConnectPool::_FireBaseConnectPool_SerialReceiveResult(string __Msg) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseConnectPool_SerialReceiveResult Function");
+#endif
   ConnectInformation _TConnectInformation;
   string _TMsgString = "", _TID = "";
 
@@ -271,6 +296,9 @@ void FireBaseConnectPool::_FireBaseConnectPool_SerialReceiveResult(string __Msg)
 }
 
 void FireBaseConnectPool::_FireBaseConnectPool_EthernetServerReceiveResult(char *__Msg, int __Sock) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseConnectPool_EthernetServerReceiveResult Function");
+#endif
   ConnectInformation _TConnectInformation;
   string _TMsgString = "", _TID = "", _TMsg = __Msg;
 
@@ -296,6 +324,9 @@ void FireBaseConnectPool::_FireBaseConnectPool_EthernetServerReceiveResult(char 
 }
 
 void FireBaseConnectPool::_FireBaseConnectPool_EthernetAnyConnentionNotifier(int __Sock) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseConnectPool_EthernetAnyConnentionNotifier Function");
+#endif
   // 누군가 들어오면 ConnectInformation에 추가.
   // 단, Client List에 ClientName을 일단 주고 시작한다.
   for_IterToEnd(vector, ClientsList, G_ConnectPool->_Ethernet->ConnectedClientList, i) {
@@ -315,6 +346,9 @@ void FireBaseConnectPool::_FireBaseConnectPool_EthernetAnyConnentionNotifier(int
 }
 
 void FireBaseConnectPool::_FireBaseConnectPool_EthernetAnyDisonnentionNotifier(int __Sock) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseConnectPool_EthernetAnyDisonnentionNotifier Function");
+#endif
   // 끊기면 ConnectInformation에서 삭제
   for_IterToEnd(vector, ConnectInformation, G_ConnectPool->_Connections, i) {
     if (_i->Socket == __Sock) {
@@ -327,6 +361,9 @@ void FireBaseConnectPool::_FireBaseConnectPool_EthernetAnyDisonnentionNotifier(i
 
 /* Start CommandThread */
 void *FireBaseConnectPool::_FireBaseConnectPool_InputCLICommandThread(void *Param) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseConnectPool_InputCLICommandThread Function");
+#endif
   // 이 쓰레드는 명령을 받으면 무조건 큐에 집어 넣는다.
   // CLI는 대기하다가 리턴하는 방식이기 때문에 콜백으로 하는것이 아니라 별도의 Thread가 존재하여야 한다.
   FireBaseConnectPool *_TAdapter = (FireBaseConnectPool *)Param;
@@ -357,6 +394,9 @@ void *FireBaseConnectPool::_FireBaseConnectPool_InputCLICommandThread(void *Para
 
 #if defined(SET_COMMON_MODULE_ETHERNET) || defined(SET_DEVICE_SERIAL)
 void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(void *Param) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseConnectPool_RecvMsgQueueProcessingThread Function");
+#endif
   FireBaseConnectPool *_TAdapter = (FireBaseConnectPool *)Param;
 
   while (_TAdapter->_ConnectPoolStarted == true) {
@@ -376,6 +416,9 @@ void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(voi
 
 
 void FireBaseConnectPool::Start_ConnectPool() {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into Start_ConnectPool Function");
+#endif
   if (_ConnectPoolStarted != true) {
     _ConnectPoolStarted = true;
 
@@ -384,6 +427,9 @@ void FireBaseConnectPool::Start_ConnectPool() {
 }
 
 void FireBaseConnectPool::Stop_ConnectPool() {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into Stop_ConnectPool Function");
+#endif
   if (_ConnectPoolStarted == true) {
     _ConnectPoolStarted = false;
 
@@ -392,6 +438,9 @@ void FireBaseConnectPool::Stop_ConnectPool() {
 }
 
 void FireBaseConnectPool::Send_Message(MessageInformations __Msg) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into Send_Message Function");
+#endif
   switch (__Msg.UserInformation.Types) {
     case 0 : // CLI
       break;

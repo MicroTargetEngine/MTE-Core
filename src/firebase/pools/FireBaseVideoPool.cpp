@@ -37,6 +37,10 @@
 
 #if defined(_FireBaseVideoPool_hpp_)
 
+#if defined(LOG_WRITE_MODE)
+#include "LogD.hpp"
+#endif
+
 FireBaseVideoPool::FireBaseVideoPool() {
   _Initialize_Members();
 }
@@ -55,6 +59,9 @@ void FireBaseVideoPool::_Initialize_Members() {
 }
 
 void *FireBaseVideoPool::_FireBaseVideoPool_VisionThread(void *Param) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+#endif
   FireBaseVideoPool *_TVideoPool = (FireBaseVideoPool *)Param;
   _TVideoPool->_VideoPoolStarted = true;
 
@@ -70,7 +77,7 @@ void *FireBaseVideoPool::_FireBaseVideoPool_VisionThread(void *Param) {
 #else
   // for mmal.
   mmalAdapter _TCapture;
-  _TCapture.open(_TAdapter->_CamResWidth, _TAdapter->_CamResHeight, true);
+  _TCapture.open(_TVideoPool->_CamResWidth, _TVideoPool->_CamResHeight, true);
 #endif
   __MUTEXINIT(_TVideoPool->_Mutex_View);
 
@@ -80,7 +87,7 @@ void *FireBaseVideoPool::_FireBaseVideoPool_VisionThread(void *Param) {
     _TCapture >> _TVideoPool->_ViewMat;
 #else
     // for mmal.
-    _TAdapter->_ViewMat = _TCapture.grab();
+    _TVideoPool->_ViewMat = _TCapture.grab();
 #endif
     // 반드시 Clone 해서 주어야 함.
     _TVideoPool->TExternalVideoCallback(_TVideoPool->_ViewMat.clone());
@@ -103,6 +110,9 @@ void *FireBaseVideoPool::_FireBaseVideoPool_VisionThread(void *Param) {
 }
 
 void FireBaseVideoPool::Start_VideoPool() {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into Start_VideoPool Function");
+#endif
   if (_VideoPoolActivated != true) {
     _VideoPoolActivated = true;
     // Activate Vision Thread.
@@ -111,17 +121,26 @@ void FireBaseVideoPool::Start_VideoPool() {
 }
 
 void FireBaseVideoPool::Stop_VideoPool() {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into Stop_VideoPool Function");
+#endif
   if (_VideoPoolActivated == true) {
     _VideoPoolActivated = false;
   }
 }
 
 void FireBaseVideoPool::Set_Resolution(int __Width, int __Height) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into Set_Resolution Function");
+#endif
   _CamResWidth = __Width;
   _CamResHeight = __Height;
 }
 
 void FireBaseVideoPool::Set_CameraPort(int __Port) {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into Set_CameraPort Function");
+#endif
   _CamPort = __Port;
 }
 
