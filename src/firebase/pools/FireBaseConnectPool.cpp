@@ -415,7 +415,7 @@ void *FireBaseConnectPool::_FireBaseConnectPool_InputCLICommandThread(void *Para
 
 void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(void *Param) {
 #if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Func", "into _FireBaseConnectPool_RecvMsgQueueProcessingThread Function");
+  G_LogD->Logging("Func", "into start _FireBaseConnectPool_RecvMsgQueueProcessingThread Function");
 #endif
   FireBaseConnectPool *_TConnectPool = (FireBaseConnectPool *) Param;
 
@@ -430,6 +430,9 @@ void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(voi
       _TConnectPool->_SyncSignal_RecvMsgQueue.Wait();
     }
   }
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into end _FireBaseConnectPool_RecvMsgQueueProcessingThread Function");
+#endif
   return 0;
 }
 
