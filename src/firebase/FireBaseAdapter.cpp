@@ -104,7 +104,7 @@ void FireBaseAdapter::_Deinitialize_Pointers() {
 
 void FireBaseAdapter::_ParseCommand(MessageInformations &__Msg) {
 #if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+  G_LogD->Logging("Func", "into _ParseCommand Function");
 #endif
   string _TID = __Msg.UserInformation.UserID;
   string _TSendingCommand = "";
@@ -302,7 +302,7 @@ void FireBaseAdapter::_FireBaseAdapter_LaneSearchedResult(LaneDetectData __Data)
 // Message
 void FireBaseAdapter::_FireBaseAdapter_ExternalRecvMessageCallback(MessageInformations __Msg) {
 #if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+  G_LogD->Logging("Func", "into _FireBaseAdapter_ExternalRecvMessageCallback Function");
 #endif
   // 큐에 집어 넣고 메세지가 왔다는 시그널을 준다.
   G_Adapter->_RecvCommandQueue.push(__Msg);
@@ -323,7 +323,7 @@ void FireBaseAdapter::_FireBaseAdapter_ExternalVideoCallback(Mat __View) {
 
 void *FireBaseAdapter::_FireBaseAdapter_VideoPassingThroughProcessingThread(void *Param) {
 #if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+  G_LogD->Logging("Func", "into _FireBaseAdapter_VideoPassingThroughProcessingThread Function");
 #endif
   FireBaseAdapter *_TAdapter = (FireBaseAdapter *) Param;
 
@@ -346,7 +346,7 @@ void *FireBaseAdapter::_FireBaseAdapter_VideoPassingThroughProcessingThread(void
 
 void *FireBaseAdapter::_FireBaseAdapter_ParseCommandThread(void *Param) {
 #if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+  G_LogD->Logging("Func", "into _FireBaseAdapter_ParseCommandThread Function");
 #endif
   FireBaseAdapter *_TAdapter = (FireBaseAdapter *) Param;
 
@@ -388,7 +388,7 @@ void *FireBaseAdapter::_FireBaseAdapter_ParseCommandThread(void *Param) {
 
 void *FireBaseAdapter::_FireBaseAdapter_SendCommandThread(void *Param) {
 #if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+  G_LogD->Logging("Func", "into _FireBaseAdapter_SendCommandThread Function");
 #endif
   FireBaseAdapter *_TAdapter = (FireBaseAdapter *) Param;
 
@@ -411,7 +411,7 @@ void *FireBaseAdapter::_FireBaseAdapter_SendCommandThread(void *Param) {
 void FireBaseAdapter::Start_Video() {
   if (_FireBaseVideoPool.Get_VideoPoolStarted() != true) {
 #if defined(LOG_WRITE_MODE)
-    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+    G_LogD->Logging("Func", "into Start_Video Function");
 #endif
     // for External Video Callback.
     _FireBaseVideoPool.TExternalVideoCallback = _FireBaseAdapter_ExternalVideoCallback;
@@ -423,7 +423,7 @@ void FireBaseAdapter::Start_Video() {
 void FireBaseAdapter::Stop_Video() {
   if (_FireBaseVideoPool.Get_VideoPoolStarted() == true) {
 #if defined(LOG_WRITE_MODE)
-    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+    G_LogD->Logging("Func", "into Stop_Video Function");
 #endif
     _FireBaseVideoPool.TExternalVideoCallback = NULL;
     _FireBaseVideoPool.Stop_VideoPool();
@@ -435,7 +435,7 @@ void FireBaseAdapter::Stop_Video() {
 void FireBaseAdapter::Start_Streaming() {
   if (_ExternalStreamViewer.Get_ExternalStreamViewerStarted() != true) {
 #if defined(LOG_WRITE_MODE)
-    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+    G_LogD->Logging("Func", "into Start_Streaming Function");
 #endif
     _ExternalStreamViewer.Start_ExternalStreamViewer();
   }
@@ -444,7 +444,7 @@ void FireBaseAdapter::Start_Streaming() {
 void FireBaseAdapter::Stop_Streaming() {
   if (_ExternalStreamViewer.Get_ExternalStreamViewerStarted() == true) {
 #if defined(LOG_WRITE_MODE)
-    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+    G_LogD->Logging("Func", "into Stop_Streaming Function");
 #endif
     _ExternalStreamViewer.Stop_ExternalStreamViewer();
     while (_ExternalStreamViewer.Get_ExternalStreamViewerStarted() == true) m_sleep (33);
@@ -455,7 +455,7 @@ void FireBaseAdapter::Start_Engine() {
   if (_AdapterStarted == true
       && _EngineStarted != true) {
 #if defined(LOG_WRITE_MODE)
-    G_LogD->SetCallback(_AllLogCallback);
+    G_LogD->Logging("Func", "into Start_Engine Function");
 #endif
     _EngineStarted = true;
 
@@ -478,7 +478,7 @@ void FireBaseAdapter::Stop_Engine() {
   if (_AdapterStarted == true
       && _EngineStarted == true) {
 #if defined(LOG_WRITE_MODE)
-    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+    G_LogD->Logging("Func", "into Stop_Engine Function");
 #endif
     //_FireBaseEngine->Stop_FireBaseEngine();
 
@@ -490,9 +490,12 @@ void FireBaseAdapter::Stop_Engine() {
 }
 
 void FireBaseAdapter::Start_GetCommand() {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->SetCallback(_AllLogCallback);
+#endif
   if (_AdapterStarted != true) {
 #if defined(LOG_WRITE_MODE)
-    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+    G_LogD->Logging("Func", "into Start_GetCommand Function");
 #endif
     _AdapterStarted = true;
 
@@ -507,7 +510,7 @@ void FireBaseAdapter::Start_GetCommand() {
 void FireBaseAdapter::Stop_GetCommand() {
   if (_AdapterStarted == true) {
 #if defined(LOG_WRITE_MODE)
-    G_LogD->Logging("Func", "into _FireBaseVideoPool_VisionThread Function");
+    G_LogD->Logging("Func", "into Stop_GetCommand Function");
 #endif
     _AdapterStarted = false;
   }

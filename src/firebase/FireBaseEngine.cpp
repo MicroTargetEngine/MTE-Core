@@ -111,7 +111,7 @@ void FireBaseEngine::_FireBaseEngine_FeatureSearchedResult(
 #endif
 ) {
 #if defined(LOG_WRITE_MODE)
-	G_LogD->Logging("Func", "into _ClientEngine_ImageSearchedResult Function");
+	G_LogD->Logging("Func", "into _FireBaseEngine_FeatureSearchedResult Function");
 #endif
 #if !defined(MODE_ONLY_DETECTION)
 	// 이것은 Engine 내부의 Queue로 가며, Engine 내부 Thread에서 검색의 결과를 다시 바깥단으로 발송한다.
@@ -230,7 +230,7 @@ void FireBaseEngine::_FireBaseEngine_FeatureSearchedResult(
 
 void FireBaseEngine::_FireBaseEngine_LaneSearchedResult(LaneDetectData __LaneSceneResult) {
 #if defined(LOG_WRITE_MODE)
-	G_LogD->Logging("Func", "into _ClientEngine_DatabaseSearchedResult Function");
+	G_LogD->Logging("Func", "into _FireBaseEngine_LaneSearchedResult Function");
 #endif
   // 지금부터 코딩 신나게 들어가야함.
 }
@@ -266,7 +266,7 @@ void *FireBaseEngine::_FireBaseEngine_FeatureSearchedExternalCallThread(void *Pa
 
 void *FireBaseEngine::_FireBaseEngine_LaneSearchedExternalCallThread(void *Param) {
 #if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Func", "into _ClientEngine_ImageSearchedExternalCallThread Function");
+  G_LogD->Logging("Func", "into _FireBaseEngine_LaneSearchedExternalCallThread Function");
 #endif
   FireBaseEngine *_TEngine = (FireBaseEngine *)Param;
 
@@ -287,7 +287,7 @@ void *FireBaseEngine::_FireBaseEngine_LaneSearchedExternalCallThread(void *Param
 
 void *FireBaseEngine::_FireBaseEngine_MainProcessingThread(void *Param) {
 #if defined(LOG_WRITE_MODE)
-	G_LogD->Logging("Func", "into _ClientEngine_MainProcessingThread Function");
+	G_LogD->Logging("Func", "into _FireBaseEngine_MainProcessingThread Function");
 #endif
 	FireBaseEngine *_TEngine = (FireBaseEngine *)Param;
 	Thread _TFeatureSearchedToExternalThread, _TLaneSearchedToExternalThread;
@@ -359,7 +359,7 @@ void *FireBaseEngine::_FireBaseEngine_MainProcessingThread(void *Param) {
 #pragma region Public Methods
 void FireBaseEngine::Start_FireBaseEngine() {
 #if defined(LOG_WRITE_MODE)
-	G_LogD->Logging("Func", "into Start_ClientEngine Function");
+	G_LogD->Logging("Func", "into Start_FireBaseEngine Function");
 #endif
 	if (_EngineActivated != true) {
 		_EngineActivated = true;
@@ -370,7 +370,7 @@ void FireBaseEngine::Start_FireBaseEngine() {
 
 void FireBaseEngine::Stop_FireBaseEngine() {
 #if defined(LOG_WRITE_MODE)
-	G_LogD->Logging("Func", "into Stop_ClientEngine Function");
+	G_LogD->Logging("Func", "into Stop_FireBaseEngine Function");
 #endif
 	if (_EngineActivated != false) {
 		_EngineActivated = false;
@@ -381,7 +381,7 @@ void FireBaseEngine::Stop_FireBaseEngine() {
 
 void FireBaseEngine::Pause_FireBaseEngine() {
 #if defined(LOG_WRITE_MODE)
-	G_LogD->Logging("Func", "into Pause_ClientEngine Function");
+	G_LogD->Logging("Func", "into Pause_FireBaseEngine Function");
 #endif
 	if (_EnginePaused == false) {
 		_EnginePaused = true;
@@ -394,7 +394,7 @@ void FireBaseEngine::Pause_FireBaseEngine() {
 
 void FireBaseEngine::Resume_FireBaseEngine() {
 #if defined(LOG_WRITE_MODE)
-	G_LogD->Logging("Func", "into Resume_ClientEngine Function");
+	G_LogD->Logging("Func", "into Resume_FireBaseEngine Function");
 #endif
 	if (_EnginePaused == true) {
 		_EnginePaused = false;

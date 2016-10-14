@@ -43,6 +43,8 @@ include(cmake/envconfig.cmake)
 set(_DEBUG 0)
 set(_DEBUG_PROPERTY 0)
 
+add_definitions(-DLOG_WRITE_MODE)
+
 ## 1. set "Project Root"
 set(clion_root_str ${CMAKE_SOURCE_DIR})
 string(REGEX REPLACE "/devenv/CLion" "" project_root_str "${clion_root_str}")
