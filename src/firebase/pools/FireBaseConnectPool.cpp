@@ -393,6 +393,8 @@ void *FireBaseConnectPool::_FireBaseConnectPool_InputCLICommandThread(void *Para
       // 좀 복잡스럽지만, 이렇게 해야 구조가 완전히 통일 된다.
       MessageInformations _TMessageInformations;
 
+      printf("%s\n", _TCommandStr.c_str());
+
       _TMessageInformations.UserInformation = _TConnectInformation;
       _TMessageInformations.RecvMessage = _TCommandStr;
 
