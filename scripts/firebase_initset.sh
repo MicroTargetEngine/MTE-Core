@@ -29,4 +29,15 @@ function forCLion()
 	cd $NowPwd
 }
 
+function forDotSrcTree() {
+	for dir in *;
+	do
+		if [ -d "$dir" ]; then
+			(cd -- "$dir" && forDotSrcTree)
+		fi
+		touch .srctree
+	done
+}
+																										
 forCLion
+(cd ../src; forDotSrcTree)
