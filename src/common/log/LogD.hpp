@@ -40,7 +40,6 @@
 #ifndef _LogD_hpp_
 #define _LogD_hpp_
 
-#include "SystemGlobalHeaders.hpp"
 #include "SystemGlobalConstants.hpp"
 
 class LogD {

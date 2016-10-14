@@ -37,24 +37,29 @@
 
 #if defined(_LogD_hpp_)
 
+#include "SystemGlobalHeaders.hpp"
+
 #if !defined(NO_LOG_MODE)
+
 void LogD::Logging(const char *CallValueString, const char *Message, ...) {
 #if defined(LOG_WRITE_MODE)
-	va_list _TArgument_List;
-	char _TStr[BUFFER_MAX_4096] = { 0, };
-	string _TString;
-	va_start(_TArgument_List, Message);
-	vsprintf(_TStr, std::string(Message).append("\n").c_str(), _TArgument_List);
-	va_end(_TArgument_List);
+  va_list _TArgument_List;
+  char _TStr[BUFFER_MAX_4096] = {0,};
+  string _TString;
+  va_start(_TArgument_List, Message);
+  vsprintf(_TStr, std::string(Message).append("\n").c_str(), _TArgument_List);
+  va_end(_TArgument_List);
 
-	TLogCallback(CallValueString, _TStr);
+  TLogCallback(CallValueString, _TStr);
 #endif
 }
+
 #endif
 
-void LogD::SetCallback(void (*TCallbackFunc) (const char *, const char *)) {
+void LogD::SetCallback(void (*TCallbackFunc)(const char *, const char *)) {
 #if defined(LOG_WRITE_MODE)
-	TLogCallback = TCallbackFunc;
+  TLogCallback = TCallbackFunc;
 #endif
 }
+
 #endif // _LogD_hpp_
