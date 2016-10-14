@@ -180,7 +180,7 @@ bool Telepathy::Server::Initialize_Server() {
 	_ServerSocket = socket(AF_INET, SOCK_STREAM, 0);
 	int _TOptionValue = 1;
 	// TCP No Delay Option.
-	setsockopt(_ServerSocket, IPPROTO_TCP, TCP_NODELAY, (const char *)&_TOptionValue, sizeof(_TOptionValue));
+	//setsockopt(_ServerSocket, IPPROTO_TCP, TCP_NODELAY, (const char *)&_TOptionValue, sizeof(_TOptionValue));
 
 	// Socket이 잘못 되었다면..
 	if (_ServerSocket ==
