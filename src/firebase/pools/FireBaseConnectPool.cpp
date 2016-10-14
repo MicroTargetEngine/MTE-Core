@@ -426,9 +426,9 @@ void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(voi
       _TConnectPool->TRecvMessageCallback(_TMsgInfo);
       _TConnectPool->_RecvMsgQueue.pop();
     }
-    else
+    else {
       _TConnectPool->_SyncSignal_RecvMsgQueue.Wait();
-
+    }
   }
   return 0;
 }
