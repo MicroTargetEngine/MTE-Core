@@ -43,19 +43,22 @@
 #include "SystemGlobalConstants.hpp"
 
 class LogD {
-private:
-public:
-	LogD() { /*SetCallback(_DummyAllLogCallback, "All"); */};
-	void Logging(const char *CallValueString, const char *Message, ...)
+  private:
+  public:
+  LogD() { /*SetCallback(_DummyAllLogCallback, "All"); */};
+
+  void Logging(const char *CallValueString, const char *Message, ...)
 #if defined(NO_LOG_MODE)
-	{}
+  {}
 #endif
-		;
-	void SetCallback(void (*TCallbackFunc) (const char *, const char *));
-	static void _DummyAllLogCallback(const char *CallValueString, const char *Message){};
+  ;
+
+  void SetCallback(void (*TCallbackFunc)(const char *, const char *));
+  static void _DummyAllLogCallback(const char *CallValueString, const char *Message) {};
 };
 
 typedef void(*_T_LOGCALLBACK)(const char *CallValueString, const char *Message);
+
 static _T_LOGCALLBACK TLogCallback;
 //static std::map<string, _T_LOGCALLBACK> TLogCallback;
 //typedef _T_LOGCALLBACK _T_SLOGCALLBACK;

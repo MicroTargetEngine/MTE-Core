@@ -38,39 +38,39 @@
 #if defined(_Thread_hpp_)
 
 SyncSignal::SyncSignal() {
-	_Initialize();
+  _Initialize();
 }
 
 SyncSignal::~SyncSignal() {
-	_Deinitialize();
+  _Deinitialize();
 }
 
 void SyncSignal::_Initialize() {
-	__CONDINIT(_Cond);
+  __CONDINIT(_Cond);
 #if defined(SET_LIB_PTHREAD)
-	__MUTEXINIT(_Mutex);
+  __MUTEXINIT(_Mutex);
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)
   __CSINIT(_CriticalSection);
 #endif
-	_IsWaiting = false;
+  _IsWaiting = false;
 }
 
 void SyncSignal::_Deinitialize() {
-	__CONDDESTROY(_Cond);
+  __CONDDESTROY(_Cond);
 #if defined(SET_LIB_PTHREAD)
-	__MUTEXDESTROY(_Mutex);
+  __MUTEXDESTROY(_Mutex);
 #endif
-	_IsWaiting = false;
+  _IsWaiting = false;
 }
 
 void SyncSignal::Wait() {
-	_IsWaiting = true;
+  _IsWaiting = true;
 #if defined(SET_LIB_PTHREAD)
-	__MUTEXLOCK(_Mutex);
+  __MUTEXLOCK(_Mutex);
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)
   __CSLOCK(_CriticalSection)
 #endif
-	__CONDWAIT(_Cond, _Mutex);
+  __CONDWAIT(_Cond, _Mutex);
 #if defined(SET_LIB_PTHREAD)
   __MUTEXUNLOCK(_Mutex);
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)
@@ -79,8 +79,8 @@ void SyncSignal::Wait() {
 }
 
 void SyncSignal::Signal() {
-	_IsWaiting = false;
-	__CONDSIGNAL(_Cond);
+  _IsWaiting = false;
+  __CONDSIGNAL(_Cond);
 }
 
 // Area of Constructor & Destructor.
@@ -106,10 +106,12 @@ Thread::Thread(bool ExcuteAttacheMode, bool ExcuteKernelMode) {
 Thread::~Thread() {
   _Deinitialize();
 }
+
 #pragma endregion Constructor & Destructor
 
 // Area of Private Methods.
 #pragma region Private Methods
+
 void Thread::_Initialize() {
   _IsThreadStarted = false;
 }
@@ -125,48 +127,50 @@ void Thread::_Deinitialize() {
 #endif
   _IsThreadStarted = false;
 }
+
 #pragma endregion Private Methods
 
 // Area of Public Methods.
 #pragma region Public Methods
-void Thread::StartThread(void *(*_StartAddress) (void *), void *Argument) {
-#if defined(SET_LIB_PTHREAD)
-	int _TAttacheMode = -1;
-	int _TKernelMode = -1;
-	_TAttacheMode = (AttacheMode == false) ? PTHREAD_CREATE_DETACHED : PTHREAD_CREATE_JOINABLE;
-	_TKernelMode = (KernelMode == false) ? PTHREAD_SCOPE_SYSTEM : PTHREAD_SCOPE_PROCESS;
 
-	// pthread attribute initialize.
-	pthread_attr_init(&_ThreadAttr);
-	// Detached thread.
-	pthread_attr_setdetachstate(&_ThreadAttr, _TAttacheMode);
-	// User space thread(linux do not support kernel mode thread, then don't use & set
-	// 'PTHREAD_SCOPE_PROCESS' at pthread_attr_setscope function to scope parameter).
-	pthread_attr_setscope(&_ThreadAttr, _TKernelMode);
-	// Create thread.
+void Thread::StartThread(void *(*_StartAddress)(void *), void *Argument) {
+#if defined(SET_LIB_PTHREAD)
+  int _TAttacheMode = -1;
+  int _TKernelMode = -1;
+  _TAttacheMode = (AttacheMode == false) ? PTHREAD_CREATE_DETACHED : PTHREAD_CREATE_JOINABLE;
+  _TKernelMode = (KernelMode == false) ? PTHREAD_SCOPE_SYSTEM : PTHREAD_SCOPE_PROCESS;
+
+  // pthread attribute initialize.
+  pthread_attr_init(&_ThreadAttr);
+  // Detached thread.
+  pthread_attr_setdetachstate(&_ThreadAttr, _TAttacheMode);
+  // User space thread(linux do not support kernel mode thread, then don't use & set
+  // 'PTHREAD_SCOPE_PROCESS' at pthread_attr_setscope function to scope parameter).
+  pthread_attr_setscope(&_ThreadAttr, _TKernelMode);
+  // Create thread.
   _IsThreadStarted = true;
-	if (pthread_create(&_Thread, NULL, _StartAddress, (void *)Argument) < 0) {
-		//if (ProgLog != NULL)
-		//	ProgLog->Logging("Don't create thread.");
+  if (pthread_create(&_Thread, NULL, _StartAddress, (void *) Argument) < 0) {
+    //if (ProgLog != NULL)
+    //	ProgLog->Logging("Don't create thread.");
     _IsThreadStarted = false;
-		return ;
-	}
+    return;
+  }
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)
   _Thread = (HANDLE)_beginthreadex(NULL, StackSize, _StartAddress, Argument, InitFlag, (unsigned *)&_ThreadID);
 #endif
 }
 
 int Thread::JoinThread() {
-	// _TResult가 -1이면 detatch mode이므로 실행 안됨을 나타냄.
-	int _TRetult = -1;
+  // _TResult가 -1이면 detatch mode이므로 실행 안됨을 나타냄.
+  int _TRetult = -1;
 #if defined(SET_LIB_PTHREAD)
-	if (AttacheMode != false) {
-		pthread_join(_Thread, (void **)&_TRetult);
-	}
+  if (AttacheMode != false) {
+    pthread_join(_Thread, (void **) &_TRetult);
+  }
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)
   _TRetult = WaitForSingleObject(_Thread, WaitingTime);
 #endif
-	return _TRetult;
+  return _TRetult;
 }
 
 #if defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)

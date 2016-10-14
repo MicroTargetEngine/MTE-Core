@@ -42,7 +42,9 @@
 #include "StringListIter.hpp"
 
 #if defined(LOG_WRITE_MODE)
+
 #include "LogD.hpp"
+
 #endif
 
 FireBaseConnectPool *G_ConnectPool;
@@ -79,7 +81,7 @@ bool FireBaseConnectPool::_Initialize() {
   // Serial Initialize.
 #if defined(SET_DEVICE_SERIAL)
   #if defined(SET_TARGET_ARM)
-  _Serial.Initialize_Serial("/dev/TtyUSB0");
+  _Serial.Initialize_Serial("/dev/ttyUSB0");
   #else
   _Serial.Initialize_Serial("/dev/tty.USB-Serial0.0");
   #endif
@@ -111,6 +113,9 @@ bool FireBaseConnectPool::_Initialize() {
   _InputCommandQueueProcessingThread.StartThread(_FireBaseConnectPool_RecvMsgQueueProcessingThread, this);
 #endif
 
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "end _Initialize Function");
+#endif
   return true;
 }
 
@@ -130,7 +135,8 @@ void FireBaseConnectPool::_Initialize_CLI() {
 
 void FireBaseConnectPool::_PutAuthor() {
   _SendToCommandLine("FireBase-Core Engine TEST Version %s.", ENGINE_EXEC_VER);
-  _SendToCommandLine("Project \"FireBase\", Team \"RobotSarang\", Open Robot Marathon, IRC.\nCopyright (c) 2016 All right reserved.");
+  _SendToCommandLine(
+      "Project \"FireBase\", Team \"RobotSarang\", Open Robot Marathon, IRC.\nCopyright (c) 2016 All right reserved.");
   _SendToCommandLine("Author: Doohoon Kim (Gabriel Kim, invi.dh.kim@gmail.com)");
 }
 
@@ -184,7 +190,7 @@ string FireBaseConnectPool::_SplitIDAndCommand(string &__Msg) {
   for_IterToEndC(list, string, _TStringTokenizer->Get_TokenedStringList(), i) {
     StringTokenizer *_TAtomicValues = new StringTokenizer();
 
-    _TAtomicValues->Set_InputCharString((const char *)_i->c_str());
+    _TAtomicValues->Set_InputCharString((const char *) _i->c_str());
     _TAtomicValues->Set_SingleToken("=");
 
     if (_TAtomicValues->Go_StringToken() != true) {
@@ -195,9 +201,9 @@ string FireBaseConnectPool::_SplitIDAndCommand(string &__Msg) {
 
     StringListIter<char *> *_TIterationSeeker = new StringListIter<char *>(_TAtomicValues->Get_TokenedCharListArrays());
 
-    if(strcmp((const char *)*_TIterationSeeker->Get_NowStringIter(), "ID") == 0) {
+    if (strcmp((const char *) *_TIterationSeeker->Get_NowStringIter(), "ID") == 0) {
       _TIterationSeeker->Move_NextStringIter();
-      _TID = (const char *)*_TIterationSeeker->Get_NowStringIter();
+      _TID = (const char *) *_TIterationSeeker->Get_NowStringIter();
     }
     else {
       _TMsgString.append(*_i);
@@ -217,7 +223,7 @@ string FireBaseConnectPool::_GetCLICommandStr() {
 #if defined(LOG_WRITE_MODE)
   G_LogD->Logging("Func", "into _GetCLICommandStr Function");
 #endif
-  char *_TCommand = (char *)calloc(BUFFER_MAX_32767, sizeof(char));
+  char *_TCommand = (char *) calloc(BUFFER_MAX_32767, sizeof(char));
   string _TCommandString = "";
   memset(_TCommand, 0, sizeof(_TCommand));
 
@@ -227,7 +233,7 @@ string FireBaseConnectPool::_GetCLICommandStr() {
     }
   }
 
-  char *_StrPtr = strchr(_TCommand,'\n');
+  char *_StrPtr = strchr(_TCommand, '\n');
 
   if (_StrPtr != NULL)
     *_StrPtr = '\0';
@@ -253,7 +259,7 @@ void FireBaseConnectPool::_SendToCommandLine(const char *Str, ...) {
   fprintf(stdout, "%s\n", _Str);
 }
 
-template <typename T>
+template<typename T>
 bool FireBaseConnectPool::_IsEmptyQueue(queue<T> __Queue, ThreadMutex &__Mutex) {
 #if defined(LOG_WRITE_MODE)
   G_LogD->Logging("Func", "into _IsEmptyQueue Function");
@@ -332,7 +338,7 @@ void FireBaseConnectPool::_FireBaseConnectPool_EthernetAnyConnentionNotifier(int
   for_IterToEnd(vector, ClientsList, G_ConnectPool->_Ethernet->ConnectedClientList, i) {
     if (_i->ClientSocket == __Sock) {
       RandomID _TRandomID;
-      _i->ClientName = (char *)_TRandomID.Make_RandomID().c_str();
+      _i->ClientName = (char *) _TRandomID.Make_RandomID().c_str();
 
       ConnectInformation _TConnectInformation;
       _TConnectInformation.Socket = __Sock;
@@ -366,7 +372,7 @@ void *FireBaseConnectPool::_FireBaseConnectPool_InputCLICommandThread(void *Para
 #endif
   // 이 쓰레드는 명령을 받으면 무조건 큐에 집어 넣는다.
   // CLI는 대기하다가 리턴하는 방식이기 때문에 콜백으로 하는것이 아니라 별도의 Thread가 존재하여야 한다.
-  FireBaseConnectPool *_TAdapter = (FireBaseConnectPool *)Param;
+  FireBaseConnectPool *_TAdapter = (FireBaseConnectPool *) Param;
 
   while (_TAdapter->_ConnectPoolStarted == true) {
     string _TCommandStr = _TAdapter->_GetCLICommandStr();
@@ -374,7 +380,7 @@ void *FireBaseConnectPool::_FireBaseConnectPool_InputCLICommandThread(void *Para
     ConnectInformation _TConnectInformation;
     _TConnectInformation.Types = 0;
 
-    if (_TAdapter->_FindConnection(_TConnectInformation) == true){
+    if (_TAdapter->_FindConnection(_TConnectInformation) == true) {
       // CLI도 마찬가지로 Connection을 찾는다.
       // 좀 복잡스럽지만, 이렇게 해야 구조가 완전히 통일 된다.
       MessageInformations _TMessageInformations;
@@ -393,11 +399,12 @@ void *FireBaseConnectPool::_FireBaseConnectPool_InputCLICommandThread(void *Para
 /* End CommandThread */
 
 #if defined(SET_COMMON_MODULE_ETHERNET) || defined(SET_DEVICE_SERIAL)
+
 void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(void *Param) {
 #if defined(LOG_WRITE_MODE)
   G_LogD->Logging("Func", "into _FireBaseConnectPool_RecvMsgQueueProcessingThread Function");
 #endif
-  FireBaseConnectPool *_TAdapter = (FireBaseConnectPool *)Param;
+  FireBaseConnectPool *_TAdapter = (FireBaseConnectPool *) Param;
 
   while (_TAdapter->_ConnectPoolStarted == true) {
     if (_TAdapter->_IsEmptyQueue(_TAdapter->_RecvMsgQueue, _TAdapter->_Mutex_RecvMsgQueue) != true) {
@@ -412,6 +419,7 @@ void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(voi
   }
   return 0;
 }
+
 #endif
 
 
@@ -445,7 +453,7 @@ void FireBaseConnectPool::Send_Message(MessageInformations __Msg) {
     case 0 : // CLI
       break;
     case 1 : // Ethernet
-      _Ethernet->SendDataToOne((char *)__Msg.SendMessage.c_str(), __Msg.UserInformation.Socket);
+      _Ethernet->SendDataToOne((char *) __Msg.SendMessage.c_str(), __Msg.UserInformation.Socket);
       break;
     case 2 : // Serial
       _Serial.Send(__Msg.SendMessage);
