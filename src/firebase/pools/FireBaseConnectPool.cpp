@@ -94,19 +94,29 @@ bool FireBaseConnectPool::_Initialize() {
 
     _Connections.push_back(_TConnectInformation);
   }
-
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "step1 _Initialize Function");
+#endif
   // Ethernet Initialize.
   _Ethernet = new Telepathy::Server();
-
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "step2 _Initialize Function");
+#endif
   if (_Ethernet->Initialize_Server() != true)
     return false;
-
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "step3 _Initialize Function");
+#endif
   _Ethernet->TServerReceivedCallback = _FireBaseConnectPool_EthernetServerReceiveResult;
   _Ethernet->TAnyConnectionNotifier = _FireBaseConnectPool_EthernetAnyConnentionNotifier;
   _Ethernet->TAnyDisconnectionNotifier = _FireBaseConnectPool_EthernetAnyDisonnentionNotifier;
-
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "step4 _Initialize Function");
+#endif
   _Ethernet->Start_Server();
-
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "step5 _Initialize Function");
+#endif
   // Activate Command Threads.
   _InputCLICommandThread.StartThread(_FireBaseConnectPool_InputCLICommandThread, this);
 #if defined(SET_COMMON_MODULE_ETHERNET) || defined(SET_DEVICE_SERIAL)
