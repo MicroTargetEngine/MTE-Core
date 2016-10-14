@@ -42,9 +42,7 @@
 #include "StringListIter.hpp"
 
 #if defined(LOG_WRITE_MODE)
-
 #include "LogD.hpp"
-
 #endif
 
 FireBaseConnectPool *G_ConnectPool;

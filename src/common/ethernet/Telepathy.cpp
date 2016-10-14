@@ -37,6 +37,10 @@
 
 #if defined(_Telepathy_hpp_)
 
+#if defined(LOG_WRITE_MODE)
+#include "LogD.hpp"
+#endif
+
 #pragma region Server Class
 // Telepathy Server Class Area.
 Telepathy::Server *G_TelepathyServer;
@@ -154,7 +158,9 @@ void *Telepathy::Server::Server_ReceivingThread(void *Param) {
 bool Telepathy::Server::Initialize_Server() {
 	// 이 부분은 통째로 Windows용
 	// 추후 다른 OS도 추가.
-
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into Initialize_Server Function");
+#endif
 #if defined(WINDOWS_SYS)
 	// WSAStartUp
 	if (WSAStartup(0x101, &_WSAData) != 0)
@@ -175,13 +181,17 @@ bool Telepathy::Server::Initialize_Server() {
 	//_M_ServerAddress.sin_addr.s_addr = inet_addr(IP_ADDR_LOCAL);
 	// port 사용
 	_ServerAddress.sin_port = htons((u_short)ART_TCP_PORT);
-
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into step1 Function");
+#endif
 	// Socket Create.
 	_ServerSocket = socket(AF_INET, SOCK_STREAM, 0);
 	int _TOptionValue = 1;
 	// TCP No Delay Option.
-	//setsockopt(_ServerSocket, IPPROTO_TCP, TCP_NODELAY, (const char *)&_TOptionValue, sizeof(_TOptionValue));
-
+	setsockopt(_ServerSocket, IPPROTO_TCP, TCP_NODELAY, (const char *)&_TOptionValue, sizeof(_TOptionValue));
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into step2 Function");
+#endif
 	// Socket이 잘못 되었다면..
 	if (_ServerSocket ==
 #if defined(WINDOWS_SYS)
@@ -197,13 +207,17 @@ bool Telepathy::Server::Initialize_Server() {
     Close_Server();
 		return false;
 	}
-
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into step3 Function");
+#endif
 	// socket listen.
 	if (listen(_ServerSocket, TCP_LISTEN_QUEUE) != 0) {
     Close_Server();
 		return false;
 	}
-
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into step4 Function");
+#endif
 	// 외부 Receive 함수용.
 	G_TelepathyServer = this;
 	IsInitializeServer = true;
