@@ -37,10 +37,6 @@
 
 #if defined(_Thread_hpp_)
 
-#if defined(LOG_WRITE_MODE)
-#include "LogD.hpp"
-#endif
-
 SyncSignal::SyncSignal() {
   _Initialize();
 }
@@ -50,31 +46,16 @@ SyncSignal::~SyncSignal() {
 }
 
 void SyncSignal::_Initialize() {
-#if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Func", "into SyncSignal _Initialize Function");
-#endif
   __CONDINIT(_Cond);
-#if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Var", "into SyncSignal __CONDINIT");
-#endif
 #if defined(SET_LIB_PTHREAD)
   __MUTEXINIT(_Mutex);
-#if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Var", "into SyncSignal __MUTEXINIT");
-#endif
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)
   __CSINIT(_CriticalSection);
-  #if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Var", "into SyncSignal __CSINIT");
-#endif
 #endif
   _IsWaiting = false;
 }
 
 void SyncSignal::_Deinitialize() {
-#if defined(LOG_WRITE_MODE)
-  G_LogD->Logging("Func", "into SyncSignal _Deinitialize Function");
-#endif
   __CONDDESTROY(_Cond);
 #if defined(SET_LIB_PTHREAD)
   __MUTEXDESTROY(_Mutex);
@@ -89,8 +70,8 @@ void SyncSignal::Wait() {
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)
   __CSLOCK(_CriticalSection)
 #endif
-  while(_IsWaiting == true)
-    __CONDWAIT(_Cond, _Mutex);
+  //while(_IsWaiting == true)
+  __CONDWAIT(_Cond, _Mutex);
 #if defined(SET_LIB_PTHREAD)
   __MUTEXUNLOCK(_Mutex);
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)

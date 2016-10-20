@@ -62,13 +62,15 @@
 #define __SEMWAIT(__SemVar) sem_wait(&__SemVar)
 #define __SEMPOST(__SemVar) sem_post(&__SemVar)
 
-#define __MUTEXINIT(__MutexVar) { __MutexVar = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER; }
+#define __MUTEXINIT(__MutexVar) { __MutexVar = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER; \
+                                  pthread_mutex_init(&__MutexVar, NULL); }
 #define __MUTEXDESTROY(__MutexVar) pthread_mutex_destroy(&__MutexVar)
 #define __MUTEXLOCK(__MutexVar) pthread_mutex_lock(&__MutexVar)
 #define __MUTEXTRYLOCK(__MutexVar) pthread_mutex_trylock(&__MutexVar)
 #define __MUTEXUNLOCK(__MutexVar) pthread_mutex_unlock(&__MutexVar)
 
-#define __CONDINIT(__CondVar) { __CondVar = (pthread_cond_t)PTHREAD_COND_INITIALIZER; }
+#define __CONDINIT(__CondVar) { __CondVar = (pthread_cond_t)PTHREAD_COND_INITIALIZER; \
+                                pthread_cond_init(&__CondVar, NULL); }
 #define __CONDDESTROY(__CondVar) pthread_cond_destroy(&__CondVar)
 #define __CONDWAIT(__CondVar, __MutexVar) pthread_cond_wait(&__CondVar, &__MutexVar)
 #define __CONDTIMEWAIT(__CondVar, __MutexVar, __Time) pthread_cond_timedwait(&__CondVar, &__MutexVar, &__Time)
