@@ -70,7 +70,8 @@ void SyncSignal::Wait() {
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)
   __CSLOCK(_CriticalSection)
 #endif
-  __CONDWAIT(_Cond, _Mutex);
+  while(_IsWaiting == true)
+    __CONDWAIT(_Cond, _Mutex);
 #if defined(SET_LIB_PTHREAD)
   __MUTEXUNLOCK(_Mutex);
 #elif defined(WINDOWS_SYS) && !defined(SET_LIB_PTHREAD)
