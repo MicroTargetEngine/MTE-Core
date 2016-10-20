@@ -46,7 +46,7 @@ LaneSearcher::LaneSearcher() {
   _Initialize();
 }
 
-LaneSearcher::~LaneSearcher(){
+LaneSearcher::~LaneSearcher() {
   _Deinitialize();
   _Initialize_Members();
 }
@@ -89,9 +89,9 @@ bool LaneSearcher::_IsEmptyImageQueue() {
 }
 
 void *LaneSearcher::_LaneSearcher_WorkerThread(void *Param) {
-	//G_LogD->Logging("Func", "into _LaneSearcher_WorkerThread Function");
+  //G_LogD->Logging("Func", "into _LaneSearcher_WorkerThread Function");
 
-  LaneSearcherWorkingInformation *_TWorkingInformation = (LaneSearcherWorkingInformation *)Param;
+  LaneSearcherWorkingInformation *_TWorkingInformation = (LaneSearcherWorkingInformation *) Param;
   LaneSearcher *_TEngine = _TWorkingInformation->_PFeatureSearcher;
 
   Mat _TGrayMat;
@@ -104,7 +104,7 @@ void *LaneSearcher::_LaneSearcher_WorkerThread(void *Param) {
   cvtColor(_TWorkingInformation->_SceneMat, _TGrayMat, CV_BGR2GRAY);
 
   medianBlur(_TGrayMat, _TGrayMat, 3);
-  GaussianBlur(_TGrayMat, _TGrayMat, Size(3,3), 0, 0, BORDER_DEFAULT);
+  GaussianBlur(_TGrayMat, _TGrayMat, Size(3, 3), 0, 0, BORDER_DEFAULT);
 
   // using Sobel mask of Grad X
   cv::Sobel(_TGrayMat, _TSobelX, CV_16S, 1, 0);
@@ -121,15 +121,15 @@ void *LaneSearcher::_LaneSearcher_WorkerThread(void *Param) {
   _THoughResult = _TWorkingInformation->_SceneMat.clone();
 
   // using Hough Line in Image
-  HoughLinesP(_TCannyResult, _TWorkingInformation->_HoughLineResult, 1, CV_PI/180, 50, 20, 10);
+  HoughLinesP(_TCannyResult, _TWorkingInformation->_HoughLineResult, 1, CV_PI / 180, 50, 20, 10);
 
-	return 0;
+  return 0;
 }
 
 void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
   //G_LogD->Logging("Func", "into _ImageSearcher_WorkAssignThread Function");
 
-  LaneSearcher *_TEngine = (LaneSearcher *)Param;
+  LaneSearcher *_TEngine = (LaneSearcher *) Param;
 
   _TEngine->_LaneSearcherWorkAssignStarted = true;
 
@@ -149,14 +149,15 @@ void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
         // Do Program.
         Thread _TThread[CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD];
         LaneSearcherWorkingInformation _TWorkInfo[CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD];
-        int _TMinX = 0, _TMinY = 0, _TMaxX =0, _TMaxY = 0;
+        int _TMinX = 0, _TMinY = 0, _TMaxX = 0, _TMaxY = 0;
 
         // Working Infomation 생성.
-        for (register int i=0; i<CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++) {
-          if (i==0) { _TMinX = 0; _TMinY = 0; _TMaxX = (_TBinaryScene.cols/2)-1; _TMaxY = (_TBinaryScene.rows/2)-1; }
-          else if (i==1) { _TMinX = _TBinaryScene.cols/2; _TMinY = 0; _TMaxX = _TBinaryScene.cols; _TMaxY = (_TBinaryScene.rows/2)-1; }
-          else if (i==2) { _TMinX = 0; _TMinY = _TBinaryScene.rows/2; _TMaxX = (_TBinaryScene.cols/2)-1; _TMaxY = _TBinaryScene.rows; }
-          else if (i==3) { _TMinX = _TBinaryScene.cols/2; _TMinY = _TBinaryScene.rows/2; _TMaxX = _TBinaryScene.cols; _TMaxY = _TBinaryScene.rows; }
+        for (register int i = 0; i < CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++) {
+          if (i == 0) { _TMinX = 0, _TMinY = 0, _TMaxX = (_TBinaryScene.cols / 2) - 1, _TMaxY = (_TBinaryScene.rows / 2) - 1; }
+          else if (i == 1) { _TMinX = _TBinaryScene.cols / 2, _TMinY = 0, _TMaxX = _TBinaryScene.cols, _TMaxY = (_TBinaryScene.rows / 2) - 1; }
+          else if (i == 2) { _TMinX = 0, _TMinY = _TBinaryScene.rows / 2, _TMaxX = (_TBinaryScene.cols / 2) - 1, _TMaxY = _TBinaryScene.rows; }
+          else if (i == 3) { _TMinX = _TBinaryScene.cols / 2, _TMinY = _TBinaryScene.rows / 2, _TMaxX = _TBinaryScene.cols, _TMaxY = _TBinaryScene.rows; }
+
           Rect _TRectROISrc(_TMinX, _TMinY, _TMaxX, _TMaxY);
           Mat _TROISrc(_TBinaryScene, _TRectROISrc);
 
@@ -166,14 +167,14 @@ void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
         }
 
         // Thread를 Joinable하게 만들고, Start 시킨다.
-        for(register int i = 0; i < CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++) {
+        for (register int i = 0; i < CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++) {
           // thread Join Mode.
           _TThread[i].AttacheMode = true;
           _TThread[i].StartThread(_LaneSearcher_WorkerThread, &_TWorkInfo[i]);
         }
 
         // Join한다. 기다리는데 시간은 보장할 수 없다.
-        for(register int i = 0; i < CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++)
+        for (register int i = 0; i < CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++)
           _TThread[i].JoinThread();
 
         ImageStitcher _TImageStitcher;
@@ -186,8 +187,8 @@ void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
 
         vector<Vec4i> _THoughLineResult;
 
-        for (int i=0; i<CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++) {
-          for (int j=0; j<_TWorkInfo[i]._HoughLineResult.size(); j++)
+        for (int i = 0; i < CLIENT_IMAGE_SEARCHER_MAXIMUM_THREAD; i++) {
+          for (int j = 0; j < _TWorkInfo[i]._HoughLineResult.size(); j++)
             _THoughLineResult.push_back(_TWorkInfo[i]._HoughLineResult[j]);
         }
 
@@ -206,9 +207,9 @@ void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
         _TLaneDetectData.ImageData = _TResScene;
 
         // calculation Data.
-        for (int i=0; i<_THoughLineResult.size(); i++){
+        for (int i = 0; i < _THoughLineResult.size(); i++) {
           Vec4i _TLine = _THoughLineResult[i];
-          _TAngle += _TMathematicalFunc.Get_AngleToPointByImagePosition(_TLine[0],_TLine[1], _TLine[2], _TLine[3]);
+          _TAngle += _TMathematicalFunc.Get_AngleToPointByImagePosition(_TLine[0], _TLine[1], _TLine[2], _TLine[3]);
         }
         _TAngle /= _THoughLineResult.size();
         _TLaneDetectData.AngleData = _TAngle;
@@ -237,7 +238,7 @@ void *LaneSearcher::_LaneSearcher_WorkAssignThread(void *Param) {
 void *LaneSearcher::_LaneSearcher_MainThread(void *Param) {
   //G_LogD->Logging("Func", "into _ImageSearcher_MainThread Function");
 
-  LaneSearcher *_TEngine = (LaneSearcher *)Param;
+  LaneSearcher *_TEngine = (LaneSearcher *) Param;
   Thread _TImageSearcherWorkAssignThread;
   _TEngine->_LaneSearcherStarted = true;
   // Semapore를 먼저 Initialize 시킨다.
@@ -262,7 +263,7 @@ void *LaneSearcher::_LaneSearcher_MainThread(void *Param) {
     _TEngine->_WorkAssignSyncSignal.Signal();
 
   // Thread 안전 종료. 다 처리될 때까지 기다린다.
-  while (_TEngine->_LaneSearcherWorkAssignStarted == true) m_sleep(33);
+  while (_TEngine->_LaneSearcherWorkAssignStarted == true) m_sleep (33);
 
   __MUTEXDESTROY(_TEngine->_Mutex_InputSceneDataQueue);
 

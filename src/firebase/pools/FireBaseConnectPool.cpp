@@ -421,6 +421,9 @@ void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(voi
 
   while (_TConnectPool->_ConnectPoolStarted == true) {
     if (_TConnectPool->_IsEmptyQueue(_TConnectPool->_RecvMsgQueue, _TConnectPool->_Mutex_RecvMsgQueue) != true) {
+#if defined(LOG_WRITE_MODE)
+      G_LogD->Logging("Var", "into start _SyncSignal_RecvMsgQueue Processing");
+#endif
       MessageInformations _TMsgInfo = _TConnectPool->_RecvMsgQueue.front();
 
       _TConnectPool->TRecvMessageCallback(_TMsgInfo);

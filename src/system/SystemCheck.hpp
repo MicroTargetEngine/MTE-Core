@@ -37,7 +37,7 @@
 #define _SystemDependency_hpp_
 
 /*
-	Compile 시어느 정도의 자동 판별을 가능케 하는 "System Dependent"한
+	Compile 시 어느 정도의 자동 판별을 가능케 하는 "System Dependent"한
 	Compile 구역 지정 구문.
  	DO NOT TOUCH THIS CODE!!
 */

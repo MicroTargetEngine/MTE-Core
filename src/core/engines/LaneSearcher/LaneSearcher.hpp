@@ -57,6 +57,7 @@ private:
     vector<Vec4i> _HoughLineResult;
     LaneSearcher *_PFeatureSearcher;
   } LaneSearcherWorkingInformation;
+
   Thread _Thread;
 
   // Thread가 읽고, 외부에서 보내주는 공유 자원들.
@@ -78,6 +79,7 @@ private:
   SyncSignal _WorkAssignSyncSignal;
 
   void _Initialize_Members();
+
   void _Initialize();
   void _Deinitialize();
 
@@ -88,7 +90,7 @@ private:
   static void *_LaneSearcher_WorkAssignThread(void *Param);
   static void *_LaneSearcher_MainThread(void *Param);
 
-  template <typename T> inline void _QueueClear(queue<T> &_XQueue);
+  template<typename T> inline void _QueueClear(queue<T> &_XQueue);
 
 public:
   LaneSearcher();
@@ -111,7 +113,7 @@ public:
   IMPLEMENT_GET(bool, LaneSearcherPause, _LaneSearcherPaused);
 };
 
-template <typename T>
+template<typename T>
 inline void LaneSearcher::_QueueClear(queue<T> &_XQueue) {
   queue<T> _TEmptyQueue;
   std::swap(_XQueue, _TEmptyQueue);

@@ -40,7 +40,7 @@
 
 // 추후에 Test로 Compile시 Process Check할 때 유용.
 #if defined(WINDOWS_SYS)
-#if defined(USING_QT)
+  #if defined(USING_QT)
     #define EXEC_FILENAME art.exe
   #elif defined(TEST_MODE)
     // for Visual Studio.

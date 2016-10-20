@@ -40,7 +40,11 @@
 double MathematicalFunc::Get_AngleToPointByImagePosition(int __Dest_X, int __Dest_Y, int __Ref_X, int __Ref_Y) {
   double _Tdx = (double)__Ref_X - (double)__Dest_X;
   double _Tdy = (double)__Ref_Y - (double)__Dest_Y;
-  return (atan2(_Tdy, _Tdx) * 180.0f) / M_PI;
+  double _TDeg = atan2(_Tdy, _Tdx) * (180.0f / M_PI);
+
+  _TDeg += ((_TDeg < 0) ? 90 : -90);
+  //return atan2(_Tdy, _Tdx) * (180.0f / M_PI);
+  return _TDeg;
 }
 
 #endif
