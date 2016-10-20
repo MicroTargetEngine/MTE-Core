@@ -430,7 +430,13 @@ void *FireBaseConnectPool::_FireBaseConnectPool_RecvMsgQueueProcessingThread(voi
       _TConnectPool->_RecvMsgQueue.pop();
     }
     else {
+#if defined(LOG_WRITE_MODE)
+      G_LogD->Logging("Var", "into _SyncSignal_RecvMsgQueue wait");
+#endif
       _TConnectPool->_SyncSignal_RecvMsgQueue.Wait();
+#if defined(LOG_WRITE_MODE)
+      G_LogD->Logging("Var", "into _SyncSignal_RecvMsgQueue release wait");
+#endif
     }
   }
 #if defined(LOG_WRITE_MODE)
