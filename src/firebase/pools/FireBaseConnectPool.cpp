@@ -268,7 +268,7 @@ void FireBaseConnectPool::_SendToCommandLine(const char *Str, ...) {
 }
 
 template<typename T>
-bool FireBaseConnectPool::_IsEmptyQueue(queue<T> __Queue, ThreadMutex &__Mutex) {
+bool FireBaseConnectPool::_IsEmptyQueue(queue<T> __Queue, ThreadMutex __Mutex) {
 #if defined(LOG_WRITE_MODE)
   G_LogD->Logging("Func", "into _IsEmptyQueue Function");
 #endif

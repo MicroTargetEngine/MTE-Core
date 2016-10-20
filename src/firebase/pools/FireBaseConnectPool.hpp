@@ -75,7 +75,7 @@ private:
   string _GetCLICommandStr();
 
   void _SendToCommandLine(const char *Str, ...);
-  template <typename T> bool _IsEmptyQueue(queue<T> __Queue, ThreadMutex &__Mutex);
+  template <typename T> bool _IsEmptyQueue(queue<T> __Queue, ThreadMutex __Mutex);
 
   // for Serial(Callback)
   static void _FireBaseConnectPool_SerialReceiveResult(string __Msg);
