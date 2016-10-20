@@ -37,7 +37,14 @@
 
 #if defined(_Thread_hpp_)
 
+#if defined(LOG_WRITE_MODE)
+#include "LogD.hpp"
+#endif
+
 SyncSignal::SyncSignal() {
+#if defined(LOG_WRITE_MODE)
+  G_LogD->Logging("Func", "into SyncSignal _Initialize Function");
+#endif
   _Initialize();
 }
 
